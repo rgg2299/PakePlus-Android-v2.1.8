@@ -1,11 +1,3037 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>手机汉字拼音打字练习</title>
+    <style>
+        /* 全局样式重置与基础设置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            min-height: 100vh;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            touch-action: pan-y;
+            overflow-x: hidden;
+        }
+
+        /* 顶部统计信息 */
+        .stats-bar {
+            background: linear-gradient(135deg, #6a89cc, #4a69bd);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: white;
+            box-shadow: 0 10px 25px rgba(106, 137, 204, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+            margin: 5px;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* 模式切换选项卡 */
+        .mode-tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 15px 5px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 0;
+            white-space: nowrap;
+            margin: 0 4px;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, #4776E6, #8E54E9);
+            color: white;
+            box-shadow: 0 6px 15px rgba(71, 118, 230, 0.4);
+        }
+
+        .mode-tab:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 题库信息卡片 */
+        .library-info {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .library-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4a69bd;
+            margin-bottom: 10px;
+        }
+
+        .library-count {
+            font-size: 28px;
+            font-weight: 800;
+            color: #2ecc71;
+            margin-bottom: 10px;
+        }
+
+        .library-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* 控制按钮组 */
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            margin-top: 15px;
+            background: white;
+            border-radius: 18px;
+            padding: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 18px 10px;
+            border-radius: 15px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 60px;
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .control-btn.secondary {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .control-btn.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .control-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 小型音乐控制栏 */
+        .mini-music-controls {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 140px;
+            justify-content: center;
+        }
+
+        .mini-music-icon {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 12px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            font-size: 20px;
+        }
+
+        .mini-music-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .mini-music-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .mini-music-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .mini-music-btn:active {
+            transform: scale(0.95);
+        }
+
+        #miniMusicToggle {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
+        }
+
+        .mini-music-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .mini-volume-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        #miniVolumeSlider {
+            width: 120px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #miniVolumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #miniVolumeValue {
+            font-size: 12px;
+            color: #666;
+            min-width: 30px;
+            text-align: center;
+        }
+
+
+
+        /* 题目显示区域 */
+        .question-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .question-header {
+            margin-bottom: 20px;
+        }
+
+        .question-number {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .question-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* 拼音显示区域 */
+        .pinyin-display {
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .pinyin-word {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 8px;
+            position: relative;
+        }
+
+        .pinyin-text {
+            font-size: 14px;
+            color: #e74c3c;
+            font-weight: 600;
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 8px;
+            min-width: 40px;
+        }
+
+        .hanzi-text {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2c3e50;
+            min-width: 40px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 句子练习样式 - 字体较小，适合长句子 */
+        .sentence-mode .hanzi-text {
+            font-size: 24px;
+            min-width: 32px;
+            padding: 6px;
+            border-radius: 10px;
+        }
+
+        .sentence-mode .pinyin-text {
+            font-size: 12px;
+            padding: 3px 6px;
+            margin-bottom: 2px;
+        }
+
+        .sentence-mode .pinyin-display {
+            margin-bottom: 20px;
+        }
+
+        .sentence-mode .pinyin-word {
+            margin: 0 5px;
+        }
+
+        /* 单字练习样式 - 保持原样 */
+        .single-mode .hanzi-text {
+            font-size: 32px;
+        }
+
+        /* 三字练习样式 */
+        .triple-mode .hanzi-text {
+            font-size: 28px;
+            min-width: 36px;
+            padding: 7px;
+        }
+
+        .triple-mode .pinyin-text {
+            font-size: 13px;
+        }
+
+        /* 成语练习样式 */
+        .idiom-mode .hanzi-text {
+            font-size: 28px;
+            min-width: 36px;
+            padding: 7px;
+        }
+
+        .idiom-mode .pinyin-text {
+            font-size: 13px;
+        }
+
+        /* 输入区域 */
+        .input-container {
+            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 20px;
+            font-size: 20px;
+            border: 3px solid #3498db;
+            border-radius: 18px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            letter-spacing: 2px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.15);
+        }
+
+        .input-field:focus {
+            border-color: #8E54E9;
+            box-shadow: 0 8px 25px rgba(142, 84, 233, 0.25);
+        }
+
+        .input-field.error {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+
+        .input-field.correct {
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
+            animation: pulse 1s ease;
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+            border-width: 4px;
+        }
+
+        .input-hint {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-top: 12px;
+        }
+
+        /* 反馈消息 */
+        .feedback-message {
+            text-align: center;
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            animation: fadeIn 0.5s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .feedback-message.correct {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .feedback-message.error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .feedback-message.complete {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            font-size: 22px;
+        }
+
+        /* 底部功能区域 */
+        .extra-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            border-radius: 12px;
+            margin: 0 auto 15px;
+        }
+
+        .feature-card:nth-child(1) .feature-icon {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .feature-card:nth-child(2) .feature-icon {
+            background: linear-gradient(135deg, #f39c12, #d35400);
+            color: white;
+        }
+
+        .feature-card:nth-child(3) .feature-icon {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .feature-card:nth-child(4) .feature-icon {
+            background: linear-gradient(135deg, #1abc9c, #16a085);
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        /* 动画定义 */
+        @keyframes shake {
+            10%, 90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+            20%, 80% {
+                transform: translate3d(2px, 0, 0);
+            }
+            30%, 50%, 70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+            40%, 60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .mode-tab {
+                font-size: 14px;
+                padding: 12px 5px;
+                min-height: 55px;
+            }
+            
+            .hanzi-text {
+                font-size: 28px;
+                min-width: 35px;
+            }
+            
+            .pinyin-text {
+                font-size: 12px;
+                min-width: 35px;
+            }
+            
+            .control-btn {
+                font-size: 14px;
+                padding: 15px 8px;
+                min-height: 55px;
+            }
+            
+            .stat-value {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .mode-tabs {
+                flex-direction: column;
+            }
+            
+            .mode-tab {
+                margin: 4px 0;
+            }
+            
+            .extra-features {
+                grid-template-columns: 1fr;
+            }
+            
+            .hanzi-text {
+                font-size: 24px;
+                min-width: 30px;
+            }
+        }
+
+        /* 模式特定颜色 */
+        .mode-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .mode-single .mode-indicator { background: #3498db; }
+        .mode-triple .mode-indicator { background: #2ecc71; }
+        .mode-sentence .mode-indicator { background: #9b59b6; }
+        .mode-idiom .mode-indicator { background: #f39c12; }
+
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(52, 152, 219, 0.1);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 隐藏元素 */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部统计信息 -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">当前得分</span>
+            <span class="stat-value" id="currentScore">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">正确率</span>
+            <span class="stat-value" id="accuracyRate">0%</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">当前题号</span>
+            <span class="stat-value" id="currentQuestion">1/10</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">已用时间</span>
+            <span class="stat-value" id="elapsedTime">0s</span>
+        </div>
+    </div>
+
+    <!-- 模式切换选项卡 -->
+    <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="single" onclick="switchMode('single')">
+            <span class="mode-indicator mode-single"></span>
+            <span>单字练习</span>
+            <small>150+ 汉字</small>
+        </button>
+        <button class="mode-tab" data-mode="triple" onclick="switchMode('triple')">
+            <span class="mode-indicator mode-triple"></span>
+            <span>三字练习</span>
+            <small>120+ 词语</small>
+        </button>
+        <button class="mode-tab" data-mode="sentence" onclick="switchMode('sentence')">
+            <span class="mode-indicator mode-sentence"></span>
+            <span>句子练习</span>
+            <small>100+ 句子</small>
+        </button>
+        <button class="mode-tab" data-mode="idiom" onclick="switchMode('idiom')">
+            <span class="mode-indicator mode-idiom"></span>
+            <span>成语练习</span>
+            <small>100+ 成语</small>
+        </button>
+    </div>
+
+    <!-- 题目显示区域 -->
+    <div class="question-card" id="questionCard">
+        <div class="question-header">
+            <div class="question-number" id="questionNumber">第 1 题</div>
+            <div class="question-progress">
+                <span id="progressText">1 / 10</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pinyin-display" id="pinyinDisplay">
+            <!-- 拼音和汉字将通过JS动态生成 -->
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 反馈消息 -->
+    <div class="feedback-message hidden" id="feedbackMessage"></div>
+
+    <!-- 输入区域 -->
+    <div class="input-container">
+        <input type="text" 
+               class="input-field" 
+               id="userInput" 
+               placeholder="根据拼音输入对应汉字..." 
+               autocomplete="off" 
+               autofocus
+               onkeypress="handleKeyPress(event)">
+        <div class="input-hint">拼音找@小橘美美</div>
+    </div>
+    </div>
+
+    <!-- 控制按钮 -->
+    <div class="control-buttons">
+        <button class="control-btn secondary" onclick="shuffleQuestions()">
+            <span>🔄 换一批</span>
+        </button>
+        <button class="control-btn danger" onclick="resetProgress()">
+            <span>🔄 重新开始</span>
+        </button>
+    </div>
+
+    <!-- 额外功能区域 -->
+    <div class="extra-features">
+        <div class="mini-music-controls">
+            <div class="mini-music-icon" id="miniMusicIcon" onclick="toggleMusic()">🎵</div>
+            <div class="mini-music-buttons">
+                <button class="mini-music-btn" id="miniMusicPrev" onclick="prevMusic()">
+                    <span>⏮️</span>
+                </button>
+                <button class="mini-music-btn" id="miniMusicPlayPause" onclick="togglePlayPause()">
+                    <span id="miniPlayPauseIcon">▶️</span>
+                </button>
+                <button class="mini-music-btn" id="miniMusicNext" onclick="nextMusic()">
+                    <span>⏭️</span>
+                </button>
+            </div>
+            <div class="mini-volume-control">
+                <input type="range" id="miniVolumeSlider" min="0" max="100" value="50" 
+                       oninput="changeVolume(this.value)">
+                <span id="miniVolumeValue">50%</span>
+            </div>
+            <div class="mini-music-info">
+                <span id="miniCurrentMusic">人间清醒.MP3</span>
+            </div>
+        </div>
+        <div class="feature-card" onclick="showErrorList()">
+            <div class="feature-icon">📝</div>
+            <div class="feature-title">错题本</div>
+            <div class="feature-desc">查看答错的题目</div>
+        </div>
+        <div class="feature-card" onclick="toggleDifficulty()">
+            <div class="feature-icon">⚙️</div>
+            <div class="feature-title">难度切换</div>
+            <div class="feature-desc">简单/困难模式</div>
+        </div>
+        <div class="feature-card" onclick="showStats()">
+            <div class="feature-icon">📊</div>
+            <div class="feature-title">统计信息</div>
+            <div class="feature-desc">详细练习数据</div>
+        </div>
+    </div>
+    </div>
+
+    <!-- 题库信息 -->
+    <div class="library-info">
+        <div class="library-title" id="libraryTitle">单字题库</div>
+        <div class="library-count" id="libraryCount">100+ 题目</div>
+        <div class="library-desc" id="libraryDesc">覆盖常用汉字，包含多音字示例</div>
+    </div>
+
+    <script>
+        // ============================================
+        // 题库数据配置
+        // ============================================
+        
+        // 汉字到拼音的多音字映射表
+        const polyphoneMap = {
+            // 根据上下文自动选择正确的拼音
+            '行': {
+                '行走': 'xíng',
+                '银行': 'háng',
+                '行动': 'xíng',
+                '行情': 'háng'
+            },
+            '长': {
+                '长短': 'cháng',
+                '成长': 'zhǎng',
+                '长江': 'cháng',
+                '长辈': 'zhǎng'
+            },
+            '重': {
+                '重要': 'zhòng',
+                '重复': 'chóng',
+                '重量': 'zhòng',
+                '重逢': 'chóng'
+            },
+            '了': {
+                '了解': 'liǎo',
+                '来了': 'le',
+                '了结': 'liǎo',
+                '算了': 'le'
+            },
+            '朝': {
+                '朝阳': 'zhāo',
+                '朝鲜': 'cháo',
+                '朝霞': 'zhāo',
+                '朝向': 'cháo'
+            },
+            '乐': {
+                '快乐': 'lè',
+                '音乐': 'yuè',
+                '乐趣': 'lè',
+                '乐队': 'yuè'
+            },
+            '发': {
+                '发现': 'fā',
+                '头发': 'fà',
+                '发展': 'fā',
+                '理发': 'fà'
+            },
+            '为': {
+                '因为': 'wèi',
+                '为了': 'wèi',
+                '成为': 'wéi',
+                '作为': 'wéi'
+            },
+            '和': {
+                '和谐': 'hé',
+                '和面': 'huó',
+                '和平': 'hé',
+                '暖和': 'huo'
+            },
+            '好': {
+                '好人': 'hǎo',
+                '好学': 'hào',
+                '好处': 'hǎo',
+                '爱好': 'hào'
+            }
+        };
+
+        // 单字题库 - 300+ 常用汉字（包含多音字示例）
+        const singleWords = [
+{ hanzi: '我', pinyin: 'wǒ' },
+{ hanzi: '你', pinyin: 'nǐ' },
+{ hanzi: '他', pinyin: 'tā' },
+{ hanzi: '她', pinyin: 'tā' },
+{ hanzi: '好', pinyin: 'hǎo' },
+{ hanzi: '学', pinyin: 'xué' },
+{ hanzi: '习', pinyin: 'xí' },
+{ hanzi: '书', pinyin: 'shū' },
+{ hanzi: '写', pinyin: 'xiě' },
+{ hanzi: '读', pinyin: 'dú' },
+{ hanzi: '字', pinyin: 'zì' },
+{ hanzi: '汉', pinyin: 'hàn' },
+{ hanzi: '语', pinyin: 'yǔ' },
+{ hanzi: '中', pinyin: 'zhōng' },
+{ hanzi: '国', pinyin: 'guó' },
+{ hanzi: '人', pinyin: 'rén' },
+{ hanzi: '民', pinyin: 'mín' },
+{ hanzi: '大', pinyin: 'dà' },
+{ hanzi: '小', pinyin: 'xiǎo' },
+{ hanzi: '多', pinyin: 'duō' },
+{ hanzi: '少', pinyin: 'shǎo' },
+{ hanzi: '上', pinyin: 'shàng' },
+{ hanzi: '下', pinyin: 'xià' },
+{ hanzi: '左', pinyin: 'zuǒ' },
+{ hanzi: '右', pinyin: 'yòu' },
+{ hanzi: '前', pinyin: 'qián' },
+{ hanzi: '后', pinyin: 'hòu' },
+{ hanzi: '里', pinyin: 'lǐ' },
+{ hanzi: '外', pinyin: 'wài' },
+{ hanzi: '东', pinyin: 'dōng' },
+{ hanzi: '西', pinyin: 'xī' },
+{ hanzi: '南', pinyin: 'nán' },
+{ hanzi: '北', pinyin: 'běi' },
+{ hanzi: '日', pinyin: 'rì' },
+{ hanzi: '月', pinyin: 'yuè' },
+{ hanzi: '星', pinyin: 'xīng' },
+{ hanzi: '光', pinyin: 'guāng' },
+{ hanzi: '天', pinyin: 'tiān' },
+{ hanzi: '地', pinyin: 'dì' },
+{ hanzi: '山', pinyin: 'shān' },
+{ hanzi: '水', pinyin: 'shuǐ' },
+{ hanzi: '火', pinyin: 'huǒ' },
+{ hanzi: '风', pinyin: 'fēng' },
+{ hanzi: '雨', pinyin: 'yǔ' },
+{ hanzi: '云', pinyin: 'yún' },
+{ hanzi: '电', pinyin: 'diàn' },
+{ hanzi: '雷', pinyin: 'léi' },
+{ hanzi: '雪', pinyin: 'xuě' },
+{ hanzi: '冰', pinyin: 'bīng' },
+{ hanzi: '雾', pinyin: 'wù' },
+{ hanzi: '行', pinyin: 'xíng' },
+{ hanzi: '长', pinyin: 'cháng' },
+{ hanzi: '重', pinyin: 'zhòng' },
+{ hanzi: '了', pinyin: 'le' },
+{ hanzi: '朝', pinyin: 'zhāo' },
+{ hanzi: '乐', pinyin: 'lè' },
+{ hanzi: '发', pinyin: 'fā' },
+{ hanzi: '为', pinyin: 'wèi' },
+{ hanzi: '和', pinyin: 'hé' },
+{ hanzi: '种', pinyin: 'zhǒng' },
+{ hanzi: '空', pinyin: 'kōng' },
+{ hanzi: '倒', pinyin: 'dǎo' },
+{ hanzi: '降', pinyin: 'jiàng' },
+{ hanzi: '传', pinyin: 'chuán' },
+{ hanzi: '差', pinyin: 'chā' },
+{ hanzi: '背', pinyin: 'bèi' },
+{ hanzi: '露', pinyin: 'lù' },
+{ hanzi: '塞', pinyin: 'sāi' },
+{ hanzi: '弹', pinyin: 'dàn' },
+{ hanzi: '参', pinyin: 'cān' },
+{ hanzi: '折', pinyin: 'zhé' },
+{ hanzi: '角', pinyin: 'jiǎo' },
+{ hanzi: '数', pinyin: 'shù' },
+{ hanzi: '量', pinyin: 'liàng' },
+{ hanzi: '调', pinyin: 'diào' },
+{ hanzi: '会', pinyin: 'huì' },
+{ hanzi: '场', pinyin: 'chǎng' },
+{ hanzi: '便', pinyin: 'biàn' },
+{ hanzi: '觉', pinyin: 'jué' },
+{ hanzi: '心', pinyin: 'xīn' },
+{ hanzi: '手', pinyin: 'shǒu' },
+{ hanzi: '足', pinyin: 'zú' },
+{ hanzi: '口', pinyin: 'kǒu' },
+{ hanzi: '耳', pinyin: 'ěr' },
+{ hanzi: '目', pinyin: 'mù' },
+{ hanzi: '鼻', pinyin: 'bí' },
+{ hanzi: '舌', pinyin: 'shé' },
+{ hanzi: '牙', pinyin: 'yá' },
+{ hanzi: '头', pinyin: 'tóu' },
+{ hanzi: '身', pinyin: 'shēn' },
+{ hanzi: '体', pinyin: 'tǐ' },
+{ hanzi: '家', pinyin: 'jiā' },
+{ hanzi: '校', pinyin: 'xiào' },
+{ hanzi: '工', pinyin: 'gōng' },
+{ hanzi: '作', pinyin: 'zuò' },
+{ hanzi: '吃', pinyin: 'chī' },
+{ hanzi: '喝', pinyin: 'hē' },
+{ hanzi: '玩', pinyin: 'wán' },
+{ hanzi: '睡', pinyin: 'shuì' },
+{ hanzi: '醒', pinyin: 'xǐng' },
+{ hanzi: '走', pinyin: 'zǒu' },
+{ hanzi: '跑', pinyin: 'pǎo' },
+{ hanzi: '跳', pinyin: 'tiào' },
+{ hanzi: '看', pinyin: 'kàn' },
+{ hanzi: '听', pinyin: 'tīng' },
+{ hanzi: '说', pinyin: 'shuō' },
+{ hanzi: '唱', pinyin: 'chàng' },
+{ hanzi: '笑', pinyin: 'xiào' },
+{ hanzi: '哭', pinyin: 'kū' },
+{ hanzi: '喜', pinyin: 'xǐ' },
+{ hanzi: '怒', pinyin: 'nù' },
+{ hanzi: '哀', pinyin: 'āi' },
+{ hanzi: '思', pinyin: 'sī' },
+{ hanzi: '想', pinyin: 'xiǎng' },
+{ hanzi: '记', pinyin: 'jì' },
+{ hanzi: '忆', pinyin: 'yì' },
+{ hanzi: '爱', pinyin: 'ài' },
+{ hanzi: '情', pinyin: 'qíng' },
+{ hanzi: '感', pinyin: 'gǎn' },
+{ hanzi: '时', pinyin: 'shí' },
+{ hanzi: '间', pinyin: 'jiān' },
+{ hanzi: '年', pinyin: 'nián' },
+{ hanzi: '分', pinyin: 'fēn' },
+{ hanzi: '秒', pinyin: 'miǎo' },
+{ hanzi: '春', pinyin: 'chūn' },
+{ hanzi: '夏', pinyin: 'xià' },
+{ hanzi: '秋', pinyin: 'qiū' },
+{ hanzi: '冬', pinyin: 'dōng' },
+{ hanzi: '花', pinyin: 'huā' },
+{ hanzi: '草', pinyin: 'cǎo' },
+{ hanzi: '树', pinyin: 'shù' },
+{ hanzi: '木', pinyin: 'mù' },
+{ hanzi: '鸟', pinyin: 'niǎo' },
+{ hanzi: '兽', pinyin: 'shòu' },
+{ hanzi: '鱼', pinyin: 'yú' },
+{ hanzi: '虫', pinyin: 'chóng' },
+{ hanzi: '金', pinyin: 'jīn' },
+{ hanzi: '土', pinyin: 'tǔ' },
+{ hanzi: '气', pinyin: 'qì' },
+{ hanzi: '力', pinyin: 'lì' },
+{ hanzi: '能', pinyin: 'néng' },
+{ hanzi: '爸', pinyin: 'bà' },
+{ hanzi: '妈', pinyin: 'mā' },
+{ hanzi: '哥', pinyin: 'gē' },
+{ hanzi: '弟', pinyin: 'dì' },
+{ hanzi: '姐', pinyin: 'jiě' },
+{ hanzi: '妹', pinyin: 'mèi' },
+{ hanzi: '爷', pinyin: 'yé' },
+{ hanzi: '奶', pinyin: 'nǎi' },
+{ hanzi: '叔', pinyin: 'shū' },
+{ hanzi: '姨', pinyin: 'yí' },
+{ hanzi: '男', pinyin: 'nán' },
+{ hanzi: '女', pinyin: 'nǚ' },
+{ hanzi: '孩', pinyin: 'hái' },
+{ hanzi: '子', pinyin: 'zi' },
+{ hanzi: '孙', pinyin: 'sūn' },
+{ hanzi: '朋', pinyin: 'péng' },
+{ hanzi: '友', pinyin: 'yǒu' },
+{ hanzi: '师', pinyin: 'shī' },
+{ hanzi: '生', pinyin: 'shēng' },
+{ hanzi: '同', pinyin: 'tóng' },
+{ hanzi: '医', pinyin: 'yī' },
+{ hanzi: '护', pinyin: 'hù' },
+{ hanzi: '警', pinyin: 'jǐng' },
+{ hanzi: '察', pinyin: 'chá' },
+{ hanzi: '法', pinyin: 'fǎ' },
+{ hanzi: '律', pinyin: 'lǜ' },
+{ hanzi: '官', pinyin: 'guān' },
+{ hanzi: '员', pinyin: 'yuán' },
+{ hanzi: '兵', pinyin: 'bīng' },
+{ hanzi: '将', pinyin: 'jiàng' },
+{ hanzi: '士', pinyin: 'shì' },
+{ hanzi: '农', pinyin: 'nóng' },
+{ hanzi: '商', pinyin: 'shāng' },
+{ hanzi: '科', pinyin: 'kē' },
+{ hanzi: '研', pinyin: 'yán' },
+{ hanzi: '文', pinyin: 'wén' },
+{ hanzi: '化', pinyin: 'huà' },
+{ hanzi: '教', pinyin: 'jiào' },
+{ hanzi: '育', pinyin: 'yù' },
+{ hanzi: '言', pinyin: 'yán' },
+{ hanzi: '音', pinyin: 'yīn' },
+{ hanzi: '画', pinyin: 'huà' },
+{ hanzi: '图', pinyin: 'tú' },
+{ hanzi: '片', pinyin: 'piàn' },
+{ hanzi: '像', pinyin: 'xiàng' },
+{ hanzi: '影', pinyin: 'yǐng' },
+{ hanzi: '视', pinyin: 'shì' },
+{ hanzi: '脑', pinyin: 'nǎo' },
+{ hanzi: '机', pinyin: 'jī' },
+{ hanzi: '网', pinyin: 'wǎng' },
+{ hanzi: '络', pinyin: 'luò' },
+{ hanzi: '据', pinyin: 'jù' },
+{ hanzi: '信', pinyin: 'xìn' },
+{ hanzi: '息', pinyin: 'xī' },
+{ hanzi: '软', pinyin: 'ruǎn' },
+{ hanzi: '硬', pinyin: 'yìng' },
+{ hanzi: '件', pinyin: 'jiàn' },
+{ hanzi: '程', pinyin: 'chéng' },
+{ hanzi: '序', pinyin: 'xù' },
+{ hanzi: '编', pinyin: 'biān' },
+{ hanzi: '码', pinyin: 'mǎ' },
+{ hanzi: '游', pinyin: 'yóu' },
+{ hanzi: '戏', pinyin: 'xì' },
+{ hanzi: '娱', pinyin: 'yú' },
+{ hanzi: '休', pinyin: 'xiū' },
+{ hanzi: '闲', pinyin: 'xián' },
+{ hanzi: '运', pinyin: 'yùn' },
+{ hanzi: '动', pinyin: 'dòng' },
+{ hanzi: '健', pinyin: 'jiàn' },
+{ hanzi: '步', pinyin: 'bù' },
+{ hanzi: '舞', pinyin: 'wǔ' },
+{ hanzi: '歌', pinyin: 'gē' },
+{ hanzi: '跃', pinyin: 'yuè' },
+{ hanzi: '泳', pinyin: 'yǒng' },
+{ hanzi: '滑', pinyin: 'huá' },
+{ hanzi: '登', pinyin: 'dēng' },
+{ hanzi: '爬', pinyin: 'pá' },
+{ hanzi: '路', pinyin: 'lù' },
+{ hanzi: '骑', pinyin: 'qí' },
+{ hanzi: '车', pinyin: 'chē' },
+{ hanzi: '驾', pinyin: 'jià' },
+{ hanzi: '驶', pinyin: 'shǐ' },
+{ hanzi: '开', pinyin: 'kāi' },
+{ hanzi: '飞', pinyin: 'fēi' },
+{ hanzi: '汽', pinyin: 'qì' },
+{ hanzi: '船', pinyin: 'chuán' },
+{ hanzi: '轮', pinyin: 'lún' },
+{ hanzi: '航', pinyin: 'háng' },
+{ hanzi: '宇', pinyin: 'yǔ' },
+{ hanzi: '宙', pinyin: 'zhòu' },
+{ hanzi: '球', pinyin: 'qiú' },
+{ hanzi: '太', pinyin: 'tài' },
+{ hanzi: '阳', pinyin: 'yáng' },
+{ hanzi: '辰', pinyin: 'chén' },
+{ hanzi: '海', pinyin: 'hǎi' },
+{ hanzi: '洋', pinyin: 'yáng' },
+{ hanzi: '河', pinyin: 'hé' },
+{ hanzi: '流', pinyin: 'liú' },
+{ hanzi: '湖', pinyin: 'hú' },
+{ hanzi: '泊', pinyin: 'pō' },
+{ hanzi: '江', pinyin: 'jiāng' },
+{ hanzi: '溪', pinyin: 'xī' },
+{ hanzi: '泉', pinyin: 'quán' },
+{ hanzi: '井', pinyin: 'jǐng' },
+{ hanzi: '源', pinyin: 'yuán' },
+{ hanzi: '森', pinyin: 'sēn' },
+{ hanzi: '林', pinyin: 'lín' },
+{ hanzi: '原', pinyin: 'yuán' },
+{ hanzi: '沙', pinyin: 'shā' },
+{ hanzi: '漠', pinyin: 'mò' },
+{ hanzi: '丘', pinyin: 'qiū' },
+{ hanzi: '陵', pinyin: 'líng' },
+{ hanzi: '高', pinyin: 'gāo' },
+{ hanzi: '低', pinyin: 'dī' },
+{ hanzi: '远', pinyin: 'yuǎn' },
+{ hanzi: '近', pinyin: 'jìn' },
+{ hanzi: '深', pinyin: 'shēn' },
+{ hanzi: '浅', pinyin: 'qiǎn' },
+{ hanzi: '厚', pinyin: 'hòu' },
+{ hanzi: '薄', pinyin: 'báo' },
+{ hanzi: '轻', pinyin: 'qīng' },
+{ hanzi: '快', pinyin: 'kuài' },
+{ hanzi: '慢', pinyin: 'màn' },
+{ hanzi: '早', pinyin: 'zǎo' },
+{ hanzi: '晚', pinyin: 'wǎn' },
+{ hanzi: '新', pinyin: 'xīn' },
+{ hanzi: '旧', pinyin: 'jiù' },
+{ hanzi: '真', pinyin: 'zhēn' },
+{ hanzi: '假', pinyin: 'jiǎ' },
+{ hanzi: '美', pinyin: 'měi' },
+{ hanzi: '丑', pinyin: 'chǒu' },
+{ hanzi: '善', pinyin: 'shàn' },
+{ hanzi: '恶', pinyin: 'è' },
+{ hanzi: '坏', pinyin: 'huài' },
+{ hanzi: '对', pinyin: 'duì' },
+{ hanzi: '错', pinyin: 'cuò' },
+{ hanzi: '正', pinyin: 'zhèng' },
+{ hanzi: '反', pinyin: 'fǎn' },
+{ hanzi: '始', pinyin: 'shǐ' },
+{ hanzi: '终', pinyin: 'zhōng' },
+{ hanzi: '关', pinyin: 'guān' },
+{ hanzi: '来', pinyin: 'lái' },
+{ hanzi: '去', pinyin: 'qù' },
+{ hanzi: '进', pinyin: 'jìn' },
+{ hanzi: '出', pinyin: 'chū' },
+{ hanzi: '坐', pinyin: 'zuò' },
+{ hanzi: '站', pinyin: 'zhàn' },
+{ hanzi: '起', pinyin: 'qǐ' },
+{ hanzi: '躺', pinyin: 'tǎng' },
+{ hanzi: '问', pinyin: 'wèn' },
+{ hanzi: '答', pinyin: 'dá' },
+{ hanzi: '求', pinyin: 'qiú' },
+{ hanzi: '给', pinyin: 'gěi' },
+{ hanzi: '买', pinyin: 'mǎi' },
+{ hanzi: '卖', pinyin: 'mài' },
+{ hanzi: '借', pinyin: 'jiè' },
+{ hanzi: '还', pinyin: 'huán' },
+{ hanzi: '送', pinyin: 'sòng' },
+{ hanzi: '收', pinyin: 'shōu' },
+{ hanzi: '接', pinyin: 'jiē' },
+{ hanzi: '找', pinyin: 'zhǎo' },
+{ hanzi: '到', pinyin: 'dào' },
+{ hanzi: '寻', pinyin: 'xún' },
+{ hanzi: '觅', pinyin: 'mì' },
+{ hanzi: '考', pinyin: 'kǎo' },
+{ hanzi: '究', pinyin: 'jiū' },
+{ hanzi: '析', pinyin: 'xī' },
+{ hanzi: '判', pinyin: 'pàn' },
+{ hanzi: '断', pinyin: 'duàn' },
+{ hanzi: '理', pinyin: 'lǐ' },
+{ hanzi: '解', pinyin: 'jiě' },
+{ hanzi: '决', pinyin: 'jué' },
+{ hanzi: '定', pinyin: 'dìng' },
+{ hanzi: '计', pinyin: 'jì' },
+{ hanzi: '划', pinyin: 'huà' },
+{ hanzi: '安', pinyin: 'ān' },
+{ hanzi: '排', pinyin: 'pái' },
+{ hanzi: '组', pinyin: 'zǔ' },
+{ hanzi: '织', pinyin: 'zhī' },
+{ hanzi: '领', pinyin: 'lǐng' },
+{ hanzi: '导', pinyin: 'dǎo' },
+{ hanzi: '管', pinyin: 'guǎn' },
+{ hanzi: '监', pinyin: 'jiān' },
+{ hanzi: '督', pinyin: 'dū' },
+{ hanzi: '检', pinyin: 'jiǎn' },
+{ hanzi: '查', pinyin: 'chá' },
+{ hanzi: '审', pinyin: 'shěn' },
+{ hanzi: '核', pinyin: 'hé' },
+{ hanzi: '评', pinyin: 'píng' },
+{ hanzi: '估', pinyin: 'gū' },
+{ hanzi: '测', pinyin: 'cè' },
+{ hanzi: '试', pinyin: 'shì' },
+{ hanzi: '验', pinyin: 'yàn' },
+{ hanzi: '证', pinyin: 'zhèng' },
+{ hanzi: '明', pinyin: 'míng' },
+{ hanzi: '显', pinyin: 'xiǎn' },
+{ hanzi: '示', pinyin: 'shì' },
+{ hanzi: '表', pinyin: 'biǎo' },
+{ hanzi: '达', pinyin: 'dá' },
+{ hanzi: '播', pinyin: 'bō' },
+{ hanzi: '宣', pinyin: 'xuān' },
+{ hanzi: '扬', pinyin: 'yáng' },
+{ hanzi: '推', pinyin: 'tuī' },
+{ hanzi: '广', pinyin: 'guǎng' },
+{ hanzi: '销', pinyin: 'xiāo' },
+{ hanzi: '售', pinyin: 'shòu' },
+{ hanzi: '购', pinyin: 'gòu' },
+{ hanzi: '订', pinyin: 'dìng' },
+{ hanzi: '付', pinyin: 'fù' },
+{ hanzi: '款', pinyin: 'kuǎn' },
+{ hanzi: '结', pinyin: 'jié' },
+{ hanzi: '算', pinyin: 'suàn' },
+{ hanzi: '价', pinyin: 'jià' },
+{ hanzi: '格', pinyin: 'gé' },
+{ hanzi: '钱', pinyin: 'qián' },
+{ hanzi: '币', pinyin: 'bì' },
+{ hanzi: '银', pinyin: 'yín' },
+{ hanzi: '铜', pinyin: 'tóng' },
+{ hanzi: '铁', pinyin: 'tiě' },
+{ hanzi: '钢', pinyin: 'gāng' },
+{ hanzi: '铝', pinyin: 'lǚ' },
+{ hanzi: '锡', pinyin: 'xī' },
+{ hanzi: '铅', pinyin: 'qiān' },
+{ hanzi: '锌', pinyin: 'xīn' },
+{ hanzi: '镍', pinyin: 'niè' },
+{ hanzi: '铬', pinyin: 'gè' },
+{ hanzi: '钨', pinyin: 'wū' },
+{ hanzi: '钼', pinyin: 'mù' },
+{ hanzi: '钛', pinyin: 'tài' },
+{ hanzi: '钒', pinyin: 'fán' },
+{ hanzi: '锰', pinyin: 'měng' },
+{ hanzi: '钴', pinyin: 'gǔ' },
+{ hanzi: '铟', pinyin: 'yīn' },
+{ hanzi: '锗', pinyin: 'zhě' },
+{ hanzi: '硒', pinyin: 'xī' },
+{ hanzi: '碲', pinyin: 'dì' },
+{ hanzi: '砷', pinyin: 'shēn' },
+{ hanzi: '硫', pinyin: 'liú' },
+{ hanzi: '磷', pinyin: 'lín' },
+{ hanzi: '碳', pinyin: 'tàn' },
+{ hanzi: '硅', pinyin: 'guī' },
+{ hanzi: '硼', pinyin: 'péng' },
+{ hanzi: '氢', pinyin: 'qīng' },
+{ hanzi: '氧', pinyin: 'yǎng' },
+{ hanzi: '氮', pinyin: 'dàn' },
+{ hanzi: '氟', pinyin: 'fú' },
+{ hanzi: '氯', pinyin: 'lǜ' },
+{ hanzi: '溴', pinyin: 'xiù' },
+{ hanzi: '碘', pinyin: 'diǎn' },
+{ hanzi: '氦', pinyin: 'hài' },
+{ hanzi: '氖', pinyin: 'nǎi' },
+{ hanzi: '氩', pinyin: 'yà' },
+{ hanzi: '氪', pinyin: 'kè' },
+{ hanzi: '氙', pinyin: 'xiān' },
+{ hanzi: '氡', pinyin: 'dōng' },
+{ hanzi: '铀', pinyin: 'yóu' },
+{ hanzi: '钚', pinyin: 'bù' },
+{ hanzi: '镭', pinyin: 'léi' },
+{ hanzi: '钍', pinyin: 'tǔ' },
+{ hanzi: '镅', pinyin: 'méi' },
+{ hanzi: '锔', pinyin: 'jū' },
+{ hanzi: '锫', pinyin: 'péi' },
+{ hanzi: '锎', pinyin: 'kāi' },
+{ hanzi: '锿', pinyin: 'āi' },
+{ hanzi: '镄', pinyin: 'fèi' },
+{ hanzi: '钔', pinyin: 'mén' },
+{ hanzi: '锘', pinyin: 'nuò' },
+{ hanzi: '铹', pinyin: 'láo' },
+{ hanzi: '𬬻', pinyin: 'lú' },
+{ hanzi: '𫓧', pinyin: 'fū' },
+{ hanzi: '钅', pinyin: 'jīn' }
+];
+
+        // 三字词语题库 - 300+ 常用三字词语（不重复）
+        const tripleWords = [
+{ hanzi: '计算机', pinyin: 'jì suàn jī' },
+{ hanzi: '小朋友', pinyin: 'xiǎo péng yǒu' },
+{ hanzi: '巧克力', pinyin: 'qiǎo kè lì' },
+{ hanzi: '电影院', pinyin: 'diàn yǐng yuàn' },
+{ hanzi: '博物馆', pinyin: 'bó wù guǎn' },
+{ hanzi: '火车站', pinyin: 'huǒ chē zhàn' },
+{ hanzi: '图书馆', pinyin: 'tú shū guǎn' },
+{ hanzi: '游泳馆', pinyin: 'yóu yǒng guǎn' },
+{ hanzi: '篮球场', pinyin: 'lán qiú chǎng' },
+{ hanzi: '足球场', pinyin: 'zú qiú chǎng' },
+{ hanzi: '办公室', pinyin: 'bàn gōng shì' },
+{ hanzi: '实验室', pinyin: 'shí yàn shì' },
+{ hanzi: '洗衣店', pinyin: 'xǐ yī diàn' },
+{ hanzi: '理发店', pinyin: 'lǐ fà diàn' },
+{ hanzi: '便利店', pinyin: 'biàn lì diàn' },
+{ hanzi: '银行里', pinyin: 'yín háng lǐ' },
+{ hanzi: '邮局里', pinyin: 'yóu jú lǐ' },
+{ hanzi: '医院里', pinyin: 'yī yuàn lǐ' },
+{ hanzi: '药店中', pinyin: 'yào diàn zhōng' },
+{ hanzi: '书店里', pinyin: 'shū diàn lǐ' },
+{ hanzi: '花店里', pinyin: 'huā diàn lǐ' },
+{ hanzi: '蛋糕店', pinyin: 'dàn gāo diàn' },
+{ hanzi: '面包店', pinyin: 'miàn bāo diàn' },
+{ hanzi: '水果店', pinyin: 'shuǐ guǒ diàn' },
+{ hanzi: '菜市场', pinyin: 'cài shì chǎng' },
+{ hanzi: '超市里', pinyin: 'chāo shì lǐ' },
+{ hanzi: '餐厅里', pinyin: 'cān tīng lǐ' },
+{ hanzi: '咖啡店', pinyin: 'kā fēi diàn' },
+{ hanzi: '快餐店', pinyin: 'kuài cān diàn' },
+{ hanzi: '早餐店', pinyin: 'zǎo cān diàn' },
+{ hanzi: '文具店', pinyin: 'wén jù diàn' },
+{ hanzi: '服装店', pinyin: 'fú zhuāng diàn' },
+{ hanzi: '鞋店里', pinyin: 'xié diàn lǐ' },
+{ hanzi: '珠宝店', pinyin: 'zhū bǎo diàn' },
+{ hanzi: '眼镜店', pinyin: 'yǎn jìng diàn' },
+{ hanzi: '礼品店', pinyin: 'lǐ pǐn diàn' },
+{ hanzi: '玩具店', pinyin: 'wán jù diàn' },
+{ hanzi: '体育店', pinyin: 'tǐ yù diàn' },
+{ hanzi: '电器店', pinyin: 'diàn qì diàn' },
+{ hanzi: '家具店', pinyin: 'jiā jù diàn' },
+{ hanzi: '建材店', pinyin: 'jiàn cái diàn' },
+{ hanzi: '农贸市场', pinyin: 'nóng mào shì chǎng' },
+{ hanzi: '批发市场', pinyin: 'pī fā shì chǎng' },
+{ hanzi: '购物中心', pinyin: 'gòu wù zhōng xīn' },
+{ hanzi: '商业街', pinyin: 'shāng yè jiē' },
+{ hanzi: '步行街', pinyin: 'bù xíng jiē' },
+{ hanzi: '美食街', pinyin: 'měi shí jiē' },
+{ hanzi: '夜市中', pinyin: 'yè shì zhōng' },
+{ hanzi: '批发城', pinyin: 'pī fā chéng' },
+{ hanzi: '早中晚', pinyin: 'zǎo zhōng wǎn' },
+{ hanzi: '上下班', pinyin: 'shàng xià bān' },
+{ hanzi: '公园里', pinyin: 'gōng yuán lǐ' },
+{ hanzi: '学校里', pinyin: 'xué xiào lǐ' },
+{ hanzi: '家庭里', pinyin: 'jiā tíng lǐ' },
+{ hanzi: '马路上', pinyin: 'mǎ lù shàng' },
+{ hanzi: '车站前', pinyin: 'chē zhàn qián' },
+{ hanzi: '电梯里', pinyin: 'diàn tī lǐ' },
+{ hanzi: '楼梯间', pinyin: 'lóu tī jiān' },
+{ hanzi: '停车场', pinyin: 'tíng chē chǎng' },
+{ hanzi: '厨房里', pinyin: 'chú fáng lǐ' },
+{ hanzi: '客厅里', pinyin: 'kè tīng lǐ' },
+{ hanzi: '卧室里', pinyin: 'wò shì lǐ' },
+{ hanzi: '书房里', pinyin: 'shū fáng lǐ' },
+{ hanzi: '阳台上', pinyin: 'yáng tái shàng' },
+{ hanzi: '花园里', pinyin: 'huā yuán lǐ' },
+{ hanzi: '街道上', pinyin: 'jiē dào shàng' },
+{ hanzi: '小巷里', pinyin: 'xiǎo xiàng lǐ' },
+{ hanzi: '广场上', pinyin: 'guǎng chǎng shàng' },
+{ hanzi: '小区内', pinyin: 'xiǎo qū nèi' },
+{ hanzi: '社区中', pinyin: 'shè qū zhōng' },
+{ hanzi: '城市里', pinyin: 'chéng shì lǐ' },
+{ hanzi: '乡镇上', pinyin: 'xiāng zhèn shàng' },
+{ hanzi: '村庄里', pinyin: 'cūn zhuāng lǐ' },
+{ hanzi: '田野间', pinyin: 'tián yě jiān' },
+{ hanzi: '山林中', pinyin: 'shān lín zhōng' },
+{ hanzi: '河岸边', pinyin: 'hé àn biān' },
+{ hanzi: '海边滩', pinyin: 'hǎi biān tān' },
+{ hanzi: '湖泊旁', pinyin: 'hú pō páng' },
+{ hanzi: '沙漠里', pinyin: 'shā mò lǐ' },
+{ hanzi: '草原上', pinyin: 'cǎo yuán shàng' },
+{ hanzi: '森林中', pinyin: 'sēn lín zhōng' },
+{ hanzi: '雪地上', pinyin: 'xuě dì shàng' },
+{ hanzi: '雨水中', pinyin: 'yǔ shuǐ zhōng' },
+{ hanzi: '阳光下', pinyin: 'yáng guāng xià' },
+{ hanzi: '月光下', pinyin: 'yuè guāng xià' },
+{ hanzi: '星空下', pinyin: 'xīng kōng xià' },
+{ hanzi: '云雾中', pinyin: 'yún wù zhōng' },
+{ hanzi: '风中行', pinyin: 'fēng zhōng xíng' },
+{ hanzi: '雨中走', pinyin: 'yǔ zhōng zǒu' },
+{ hanzi: '雪中跑', pinyin: 'xuě zhōng pǎo' },
+{ hanzi: '烈日下', pinyin: 'liè rì xià' },
+{ hanzi: '寒风中', pinyin: 'hán fēng zhōng' },
+{ hanzi: '暖阳下', pinyin: 'nuǎn yáng xià' },
+{ hanzi: '黄昏时', pinyin: 'huáng hūn shí' },
+{ hanzi: '黎明前', pinyin: 'lí míng qián' },
+{ hanzi: '正午时', pinyin: 'zhèng wǔ shí' },
+{ hanzi: '半夜里', pinyin: 'bàn yè lǐ' },
+{ hanzi: '晨曦中', pinyin: 'chén xī zhōng' },
+{ hanzi: '暮色中', pinyin: 'mù sè zhōng' },
+{ hanzi: '物理学', pinyin: 'wù lǐ xué' },
+{ hanzi: '化学科', pinyin: 'huà xué kē' },
+{ hanzi: '生物学', pinyin: 'shēng wù xué' },
+{ hanzi: '数学课', pinyin: 'shù xué kè' },
+{ hanzi: '语文课', pinyin: 'yǔ wén kè' },
+{ hanzi: '英语课', pinyin: 'yīng yǔ kè' },
+{ hanzi: '历史课', pinyin: 'lì shǐ kè' },
+{ hanzi: '地理课', pinyin: 'dì lǐ kè' },
+{ hanzi: '政治课', pinyin: 'zhèng zhì kè' },
+{ hanzi: '美术课', pinyin: 'měi shù kè' },
+{ hanzi: '音乐课', pinyin: 'yīn yuè kè' },
+{ hanzi: '体育课', pinyin: 'tǐ yù kè' },
+{ hanzi: '编程课', pinyin: 'biān chéng kè' },
+{ hanzi: '设计课', pinyin: 'shè jì kè' },
+{ hanzi: '心理课', pinyin: 'xīn lǐ kè' },
+{ hanzi: '社会课', pinyin: 'shè huì kè' },
+{ hanzi: '自然课', pinyin: 'zì rán kè' },
+{ hanzi: '科学课', pinyin: 'kē xué kè' },
+{ hanzi: '技术课', pinyin: 'jì shù kè' },
+{ hanzi: '哲学课', pinyin: 'zhé xué kè' },
+{ hanzi: '文学课', pinyin: 'wén xué kè' },
+{ hanzi: '艺术课', pinyin: 'yì shù kè' },
+{ hanzi: '舞蹈课', pinyin: 'wǔ dǎo kè' },
+{ hanzi: '戏剧课', pinyin: 'xì jù kè' },
+{ hanzi: '医学课', pinyin: 'yī xué kè' },
+{ hanzi: '法学课', pinyin: 'fǎ xué kè' },
+{ hanzi: '经济学', pinyin: 'jīng jì xué' },
+{ hanzi: '管理学', pinyin: 'guǎn lǐ xué' },
+{ hanzi: '工程学', pinyin: 'gōng chéng xué' },
+{ hanzi: '建筑学', pinyin: 'jiàn zhù xué' },
+{ hanzi: '电子学', pinyin: 'diàn zǐ xué' },
+{ hanzi: '机械学', pinyin: 'jī xiè xué' },
+{ hanzi: '化学课', pinyin: 'huà xué kè' },
+{ hanzi: '物理课', pinyin: 'wù lǐ kè' },
+{ hanzi: '生物课', pinyin: 'shēng wù kè' },
+{ hanzi: '天文课', pinyin: 'tiān wén kè' },
+{ hanzi: '地质课', pinyin: 'dì zhì kè' },
+{ hanzi: '环境课', pinyin: 'huán jìng kè' },
+{ hanzi: '生态课', pinyin: 'shēng tài kè' },
+{ hanzi: '农业课', pinyin: 'nóng yè kè' },
+{ hanzi: '林业课', pinyin: 'lín yè kè' },
+{ hanzi: '渔业课', pinyin: 'yú yè kè' },
+{ hanzi: '畜牧课', pinyin: 'xù mù kè' },
+{ hanzi: '园艺课', pinyin: 'yuán yì kè' },
+{ hanzi: '烹饪课', pinyin: 'pēng rèn kè' },
+{ hanzi: '书法课', pinyin: 'shū fǎ kè' },
+{ hanzi: '父母亲', pinyin: 'fù mǔ qīn' },
+{ hanzi: '祖父母', pinyin: 'zǔ fù mǔ' },
+{ hanzi: '兄弟姐妹', pinyin: 'xiōng dì jiě mèi' },
+{ hanzi: '好同学', pinyin: 'hǎo tóng xué' },
+{ hanzi: '好同事', pinyin: 'hǎo tóng shì' },
+{ hanzi: '好邻居', pinyin: 'hǎo lín jū' },
+{ hanzi: '好朋友', pinyin: 'hǎo péng yǒu' },
+{ hanzi: '情侣间', pinyin: 'qíng lǚ jiān' },
+{ hanzi: '师生情', pinyin: 'shī shēng qíng' },
+{ hanzi: '同学谊', pinyin: 'tóng xué yì' },
+{ hanzi: '同事间', pinyin: 'tóng shì jiān' },
+{ hanzi: '领导好', pinyin: 'lǐng dǎo hǎo' },
+{ hanzi: '客户好', pinyin: 'kè hù hǎo' },
+{ hanzi: '陌生人', pinyin: 'mò shēng rén' },
+{ hanzi: '自己人', pinyin: 'zì jǐ rén' },
+{ hanzi: '前辈们', pinyin: 'qián bèi men' },
+{ hanzi: '后辈们', pinyin: 'hòu bèi men' },
+{ hanzi: '同龄人', pinyin: 'tóng líng rén' },
+{ hanzi: '同乡人', pinyin: 'tóng xiāng rén' },
+{ hanzi: '同窗友', pinyin: 'tóng chuāng yǒu' },
+{ hanzi: '战友们', pinyin: 'zhàn yǒu men' },
+{ hanzi: '伙伴们', pinyin: 'huǒ bàn men' },
+{ hanzi: '上下级', pinyin: 'shàng xià jí' },
+{ hanzi: '合作方', pinyin: 'hé zuò fāng' },
+{ hanzi: '师生间', pinyin: 'shī shēng jiān' },
+{ hanzi: '师徒情', pinyin: 'shī tú qíng' },
+{ hanzi: '师生谊', pinyin: 'shī shēng yì' },
+{ hanzi: '同伴们', pinyin: 'tóng bàn men' },
+{ hanzi: '朋友们', pinyin: 'péng yǒu men' },
+{ hanzi: '知己者', pinyin: 'zhī jǐ zhě' },
+{ hanzi: '知心人', pinyin: 'zhī xīn rén' },
+{ hanzi: '亲戚们', pinyin: 'qīn qī men' },
+{ hanzi: '亲人团', pinyin: 'qīn rén tuán' },
+{ hanzi: '家属们', pinyin: 'jiā shǔ men' },
+{ hanzi: '家属会', pinyin: 'jiā shǔ huì' },
+{ hanzi: '族人圈', pinyin: 'zú rén quān' },
+{ hanzi: '同族人', pinyin: 'tóng zú rén' },
+{ hanzi: '乡亲们', pinyin: 'xiāng qīn men' },
+{ hanzi: '老乡们', pinyin: 'lǎo xiāng men' },
+{ hanzi: '邻居们', pinyin: 'lín jū men' },
+{ hanzi: '同事群', pinyin: 'tóng shì qún' },
+{ hanzi: '工作圈', pinyin: 'gōng zuò quān' },
+{ hanzi: '校友会', pinyin: 'xiào yǒu huì' },
+{ hanzi: '同学会', pinyin: 'tóng xué huì' },
+{ hanzi: '战友会', pinyin: 'zhàn yǒu huì' },
+{ hanzi: '朋友群', pinyin: 'péng yǒu qún' },
+{ hanzi: '社交圈', pinyin: 'shè jiāo quān' },
+{ hanzi: '人脉网', pinyin: 'rén mài wǎng' },
+{ hanzi: '关系网', pinyin: 'guān xì wǎng' },
+{ hanzi: '人际网', pinyin: 'rén jì wǎng' },
+{ hanzi: '我爱你', pinyin: 'wǒ ài nǐ' },
+{ hanzi: '谢谢你', pinyin: 'xiè xiè nǐ' },
+{ hanzi: '对不起', pinyin: 'duì bù qǐ' },
+{ hanzi: '没关系', pinyin: 'méi guān xì' },
+{ hanzi: '非常好', pinyin: 'fēi cháng hǎo' },
+{ hanzi: '真不错', pinyin: 'zhēn bù cuò' },
+{ hanzi: '太棒了', pinyin: 'tài bàng le' },
+{ hanzi: '真可惜', pinyin: 'zhēn kě xī' },
+{ hanzi: '真遗憾', pinyin: 'zhēn yí hàn' },
+{ hanzi: '太好了', pinyin: 'tài hǎo le' },
+{ hanzi: '真开心', pinyin: 'zhēn kāi xīn' },
+{ hanzi: '真难过', pinyin: 'zhēn nán guò' },
+{ hanzi: '真生气', pinyin: 'zhēn shēng qì' },
+{ hanzi: '真害怕', pinyin: 'zhēn hài pà' },
+{ hanzi: '真害羞', pinyin: 'zhēn hài xiū' },
+{ hanzi: '真骄傲', pinyin: 'zhēn jiāo ào' },
+{ hanzi: '真满意', pinyin: 'zhēn mǎn yì' },
+{ hanzi: '真失望', pinyin: 'zhēn shī wàng' },
+{ hanzi: '真无聊', pinyin: 'zhēn wú liáo' },
+{ hanzi: '真有趣', pinyin: 'zhēn yǒu qù' },
+{ hanzi: '真幸福', pinyin: 'zhēn xìng fú' },
+{ hanzi: '真快乐', pinyin: 'zhēn kuài lè' },
+{ hanzi: '真欢喜', pinyin: 'zhēn huān xǐ' },
+{ hanzi: '真感激', pinyin: 'zhēn gǎn jī' },
+{ hanzi: '真感动', pinyin: 'zhēn gǎn dòng' },
+{ hanzi: '真温暖', pinyin: 'zhēn wēn nuǎn' },
+{ hanzi: '真温馨', pinyin: 'zhēn wēn xīn' },
+{ hanzi: '真甜蜜', pinyin: 'zhēn tián mì' },
+{ hanzi: '真浪漫', pinyin: 'zhēn làng màn' },
+{ hanzi: '真美好', pinyin: 'zhēn měi hǎo' },
+{ hanzi: '真美丽', pinyin: 'zhēn měi lì' },
+{ hanzi: '真漂亮', pinyin: 'zhēn piào liàng' },
+{ hanzi: '真帅气', pinyin: 'zhēn shuài qì' },
+{ hanzi: '真英俊', pinyin: 'zhēn yīng jùn' },
+{ hanzi: '真可爱', pinyin: 'zhēn kě ài' },
+{ hanzi: '真聪明', pinyin: 'zhēn cōng míng' },
+{ hanzi: '真机智', pinyin: 'zhēn jī zhì' },
+{ hanzi: '真勇敢', pinyin: 'zhēn yǒng gǎn' },
+{ hanzi: '真坚强', pinyin: 'zhēn jiān qiáng' },
+{ hanzi: '真自信', pinyin: 'zhēn zì xìn' },
+{ hanzi: '真乐观', pinyin: 'zhēn lè guān' },
+{ hanzi: '真积极', pinyin: 'zhēn jī jí' },
+{ hanzi: '真努力', pinyin: 'zhēn nǔ lì' },
+{ hanzi: '真勤奋', pinyin: 'zhēn qín fèn' },
+{ hanzi: '真刻苦', pinyin: 'zhēn kè kǔ' },
+{ hanzi: '真认真', pinyin: 'zhēn rèn zhēn' },
+{ hanzi: '真负责', pinyin: 'zhēn fù zé' },
+{ hanzi: '真可靠', pinyin: 'zhēn kě kào' },
+{ hanzi: '真真诚', pinyin: 'zhēn zhēn chéng' },
+{ hanzi: '真善良', pinyin: 'zhēn shàn liáng' },
+{ hanzi: '北京市', pinyin: 'běi jīng shì' },
+{ hanzi: '上海市', pinyin: 'shàng hǎi shì' },
+{ hanzi: '广州市', pinyin: 'guǎng zhōu shì' },
+{ hanzi: '深圳市', pinyin: 'shēn zhèn shì' },
+{ hanzi: '杭州市', pinyin: 'háng zhōu shì' },
+{ hanzi: '南京市', pinyin: 'nán jīng shì' },
+{ hanzi: '武汉市', pinyin: 'wǔ hàn shì' },
+{ hanzi: '成都市', pinyin: 'chéng dū shì' },
+{ hanzi: '重庆市', pinyin: 'chóng qìng shì' },
+{ hanzi: '西安市', pinyin: 'xī ān shì' },
+{ hanzi: '天津市', pinyin: 'tiān jīn shì' },
+{ hanzi: '长沙市', pinyin: 'cháng shā shì' },
+{ hanzi: '沈阳市', pinyin: 'shěn yáng shì' },
+{ hanzi: '哈尔滨', pinyin: 'hā ěr bīn' },
+{ hanzi: '长春市', pinyin: 'cháng chūn shì' },
+{ hanzi: '大连市', pinyin: 'dà lián shì' },
+{ hanzi: '青岛市', pinyin: 'qīng dǎo shì' },
+{ hanzi: '济南市', pinyin: 'jì nán shì' },
+{ hanzi: '厦门市', pinyin: 'xià mén shì' },
+{ hanzi: '福州市', pinyin: 'fú zhōu shì' },
+{ hanzi: '苏州市', pinyin: 'sū zhōu shì' },
+{ hanzi: '无锡市', pinyin: 'wú xī shì' },
+{ hanzi: '宁波市', pinyin: 'níng bō shì' },
+{ hanzi: '温州市', pinyin: 'wēn zhōu shì' },
+{ hanzi: '合肥市', pinyin: 'hé féi shì' },
+{ hanzi: '南昌市', pinyin: 'nán chāng shì' },
+{ hanzi: '郑州市', pinyin: 'zhèng zhōu shì' },
+{ hanzi: '石家庄', pinyin: 'shí jiā zhuāng' },
+{ hanzi: '太原市', pinyin: 'tài yuán shì' },
+{ hanzi: '呼和浩特', pinyin: 'hū hé hào tè' },
+{ hanzi: '兰州市', pinyin: 'lán zhōu shì' },
+{ hanzi: '西宁市', pinyin: 'xī níng shì' },
+{ hanzi: '银川市', pinyin: 'yín chuān shì' },
+{ hanzi: '乌鲁木齐', pinyin: 'wū lǔ mù qí' },
+{ hanzi: '拉萨市', pinyin: 'lā sà shì' },
+{ hanzi: '昆明市', pinyin: 'kūn míng shì' },
+{ hanzi: '贵阳市', pinyin: 'guì yáng shì' },
+{ hanzi: '南宁市', pinyin: 'nán níng shì' },
+{ hanzi: '海口市', pinyin: 'hǎi kǒu shì' },
+{ hanzi: '台北市', pinyin: 'tái běi shì' },
+{ hanzi: '高雄市', pinyin: 'gāo xióng shì' },
+{ hanzi: '香港市', pinyin: 'xiāng gǎng shì' },
+{ hanzi: '澳门市', pinyin: 'ào mén shì' },
+{ hanzi: '新加坡', pinyin: 'xīn jiā pō' },
+{ hanzi: '吉隆坡', pinyin: 'jí lóng pō' },
+{ hanzi: '曼谷市', pinyin: 'màn gǔ shì' },
+{ hanzi: '东京市', pinyin: 'dōng jīng shì' },
+{ hanzi: '首尔市', pinyin: 'shǒu ěr shì' },
+{ hanzi: '纽约市', pinyin: 'niǔ yuē shì' },
+{ hanzi: '西瓜皮', pinyin: 'xī guā pí' },
+{ hanzi: '哈密瓜', pinyin: 'hā mì guā' },
+{ hanzi: '甜橙子', pinyin: 'tián chéng zi' },
+{ hanzi: '酸葡萄', pinyin: 'suān pú tao' },
+{ hanzi: '红苹果', pinyin: 'hóng píng guǒ' },
+{ hanzi: '绿香蕉', pinyin: 'lǜ xiāng jiāo' }
+];
+
+        // 句子题库 - 300+ 常用句子（不重复）
+        const sentences = [
+{ hanzi: '你好，请问怎么称呼？', pinyin: 'nǐ hǎo, qǐng wèn zěn me chēng hū?' },
+{ hanzi: '今天天气真不错。', pinyin: 'jīn tiān tiān qì zhēn bù cuò.' },
+{ hanzi: '我想去图书馆看书。', pinyin: 'wǒ xiǎng qù tú shū guǎn kàn shū.' },
+{ hanzi: '我们一起吃午饭吧。', pinyin: 'wǒ men yì qǐ chī wǔ fàn ba.' },
+{ hanzi: '请问现在几点了？', pinyin: 'qǐng wèn xiàn zài jǐ diǎn le?' },
+{ hanzi: '这个地方我认识。', pinyin: 'zhè gè dì fang wǒ rèn shí.' },
+{ hanzi: '明天我们去公园玩。', pinyin: 'míng tiān wǒ men qù gōng yuán wán.' },
+{ hanzi: '我喜欢喝咖啡和茶。', pinyin: 'wǒ xǐ huān hē kā fēi hé chá.' },
+{ hanzi: '你的手机号码是多少？', pinyin: 'nǐ de shǒu jī hào mǎ shì duō shǎo?' },
+{ hanzi: '我住在城市的东边。', pinyin: 'wǒ zhù zài chéng shì de dōng biān.' },
+{ hanzi: '周末你想做什么？', pinyin: 'zhōu mò nǐ xiǎng zuò shén me?' },
+{ hanzi: '这个电影很有意思。', pinyin: 'zhè gè diàn yǐng hěn yǒu yì sī.' },
+{ hanzi: '请给我一杯水，谢谢。', pinyin: 'qǐng gěi wǒ yì bēi shuǐ, xiè xiè.' },
+{ hanzi: '我不会说日语。', pinyin: 'wǒ bù huì shuō rì yǔ.' },
+{ hanzi: '明天有考试，我要复习。', pinyin: 'míng tiān yǒu kǎo shì, wǒ yào fù xí.' },
+{ hanzi: '今天星期几？', pinyin: 'jīn tiān xīng qī jǐ?' },
+{ hanzi: '请问厕所在哪里？', pinyin: 'qǐng wèn cè suǒ zài nǎ lǐ?' },
+{ hanzi: '这个多少钱？', pinyin: 'zhè gè duō shǎo qián?' },
+{ hanzi: '我可以试一下吗？', pinyin: 'wǒ kě yǐ shì yī xià ma?' },
+{ hanzi: '你今天过得怎么样？', pinyin: 'nǐ jīn tiān guò de zěn me yàng?' },
+{ hanzi: '我明白了，谢谢你。', pinyin: 'wǒ míng bái le, xiè xiè nǐ.' },
+{ hanzi: '对不起，我来晚了。', pinyin: 'duì bù qǐ, wǒ lái wǎn le.' },
+{ hanzi: '我不太清楚这件事。', pinyin: 'wǒ bù tài qīng chǔ zhè jiàn shì.' },
+{ hanzi: '你有什么建议吗？', pinyin: 'nǐ yǒu shén me jiàn yì ma?' },
+{ hanzi: '请稍等一下。', pinyin: 'qǐng shāo děng yī xià.' },
+{ hanzi: '你叫什么名字？', pinyin: 'nǐ jiào shén me míng zì?' },
+{ hanzi: '请问这里有人吗？', pinyin: 'qǐng wèn zhè lǐ yǒu rén ma?' },
+{ hanzi: '我来自中国北京。', pinyin: 'wǒ lái zì zhōng guó běi jīng.' },
+{ hanzi: '你今天吃饭了吗？', pinyin: 'nǐ jīn tiān chī fàn le ma?' },
+{ hanzi: '我有点累了，想休息。', pinyin: 'wǒ yǒu diǎn lèi le, xiǎng xiū xī.' },
+{ hanzi: '请帮我一个忙好吗？', pinyin: 'qǐng bāng wǒ yí gè máng hǎo ma?' },
+{ hanzi: '你最近过得怎么样？', pinyin: 'nǐ zuì jìn guò de zěn me yàng?' },
+{ hanzi: '我很高兴认识你。', pinyin: 'wǒ hěn gāo xìng rèn shí nǐ.' },
+{ hanzi: '请问这条街叫什么？', pinyin: 'qǐng wèn zhè tiáo jiē jiào shén me?' },
+{ hanzi: '明天几点钟见面？', pinyin: 'míng tiān jǐ diǎn zhōng jiàn miàn?' },
+{ hanzi: '你觉得这个怎么样？', pinyin: 'nǐ jué de zhè gè zěn me yàng?' },
+{ hanzi: '我很喜欢这个地方。', pinyin: 'wǒ hěn xǐ huān zhè gè dì fang.' },
+{ hanzi: '请给我一张纸和笔。', pinyin: 'qǐng gěi wǒ yì zhāng zhǐ hé bǐ.' },
+{ hanzi: '你能再说一遍吗？', pinyin: 'nǐ néng zài shuō yī biàn ma?' },
+{ hanzi: '我不太会讲中文。', pinyin: 'wǒ bù tài huì jiǎng zhōng wén.' },
+{ hanzi: '请问这里可以抽烟吗？', pinyin: 'qǐng wèn zhè lǐ kě yǐ chōu yān ma?' },
+{ hanzi: '我要去超市买东西。', pinyin: 'wǒ yào qù chāo shì mǎi dōng xī.' },
+{ hanzi: '请帮我把门关上。', pinyin: 'qǐng bāng wǒ bǎ mén guān shàng.' },
+{ hanzi: '你的生日是什么时候？', pinyin: 'nǐ de shēng rì shì shén me shí hòu?' },
+{ hanzi: '今天是我的生日。', pinyin: 'jīn tiān shì wǒ de shēng rì.' },
+{ hanzi: '祝你生日快乐！', pinyin: 'zhù nǐ shēng rì kuài lè!' },
+{ hanzi: '恭喜你通过了考试。', pinyin: 'gōng xǐ nǐ tōng guò le kǎo shì.' },
+{ hanzi: '祝你工作顺利。', pinyin: 'zhù nǐ gōng zuò shùn lì.' },
+{ hanzi: '希望你每天开心。', pinyin: 'xī wàng nǐ měi tiān kāi xīn.' },
+{ hanzi: '我们一起去看电影吧。', pinyin: 'wǒ men yì qǐ qù kàn diàn yǐng ba.' },
+{ hanzi: '床前明月光，疑是地上霜。', pinyin: 'chuáng qián míng yuè guāng, yí shì dì shàng shuāng.' },
+{ hanzi: '欲穷千里目，更上一层楼。', pinyin: 'yù qióng qiān lǐ mù, gèng shàng yì céng lóu.' },
+{ hanzi: '白日依山尽，黄河入海流。', pinyin: 'bái rì yī shān jìn, huáng hé rù hǎi liú.' },
+{ hanzi: '春眠不觉晓，处处闻啼鸟。', pinyin: 'chūn mián bù jué xiǎo, chù chù wén tí niǎo.' },
+{ hanzi: '红豆生南国，春来发几枝。', pinyin: 'hóng dòu shēng nán guó, chūn lái fā jǐ zhī.' },
+{ hanzi: '举头望明月，低头思故乡。', pinyin: 'jǔ tóu wàng míng yuè, dī tóu sī gù xiāng.' },
+{ hanzi: '海内存知己，天涯若比邻。', pinyin: 'hǎi nèi cún zhī jǐ, tiān yá ruò bǐ lín.' },
+{ hanzi: '采菊东篱下，悠然见南山。', pinyin: 'cǎi jú dōng lí xià, yōu rán jiàn nán shān.' },
+{ hanzi: '大漠孤烟直，长河落日圆。', pinyin: 'dà mò gū yān zhí, cháng hé luò rì yuán.' },
+{ hanzi: '会当凌绝顶，一览众山小。', pinyin: 'huì dāng líng jué dǐng, yī lǎn zhòng shān xiǎo.' },
+{ hanzi: '山重水复疑无路，柳暗花明又一村。', pinyin: 'shān chóng shuǐ fù yí wú lù, liǔ àn huā míng yòu yì cūn.' },
+{ hanzi: '人生得意须尽欢，莫使金樽空对月。', pinyin: 'rén shēng dé yì xū jìn huān, mò shǐ jīn zūn kōng duì yuè.' },
+{ hanzi: '天生我材必有用，千金散尽还复来。', pinyin: 'tiān shēng wǒ cái bì yǒu yòng, qiān jīn sàn jìn huán fù lái.' },
+{ hanzi: '春风得意马蹄疾，一日看尽长安花。', pinyin: 'chūn fēng dé yì mǎ tí jí, yī rì kàn jìn cháng ān huā.' },
+{ hanzi: '无边落木萧萧下，不尽长江滚滚来。', pinyin: 'wú biān luò mù xiāo xiāo xià, bù jìn cháng jiāng gǔn gǔn lái.' },
+{ hanzi: '两个黄鹂鸣翠柳，一行白鹭上青天。', pinyin: 'liǎng gè huáng lí míng cuì liǔ, yī háng bái lù shàng qīng tiān.' },
+{ hanzi: '朝辞白帝彩云间，千里江陵一日还。', pinyin: 'zhāo cí bái dì cǎi yún jiān, qiān lǐ jiāng líng yī rì huán.' },
+{ hanzi: '日照香炉生紫烟，遥看瀑布挂前川。', pinyin: 'rì zhào xiāng lú shēng zǐ yān, yáo kàn pù bù guà qián chuān.' },
+{ hanzi: '飞流直下三千尺，疑是银河落九天。', pinyin: 'fēi liú zhí xià sān qiān chǐ, yí shì yín hé luò jiǔ tiān.' },
+{ hanzi: '停车坐爱枫林晚，霜叶红于二月花。', pinyin: 'tíng chē zuò ài fēng lín wǎn, shuāng yè hóng yú èr yuè huā.' },
+{ hanzi: '月落乌啼霜满天，江枫渔火对愁眠。', pinyin: 'yuè luò wū tí shuāng mǎn tiān, jiāng fēng yú huǒ duì chóu mián.' },
+{ hanzi: '姑苏城外寒山寺，夜半钟声到客船。', pinyin: 'gū sū chéng wài hán shān sì, yè bàn zhōng shēng dào kè chuán.' },
+{ hanzi: '清明时节雨纷纷，路上行人欲断魂。', pinyin: 'qīng míng shí jié yǔ fēn fēn, lù shàng xíng rén yù duàn hún.' },
+{ hanzi: '借问酒家何处有，牧童遥指杏花村。', pinyin: 'jiè wèn jiǔ jiā hé chù yǒu, mù tóng yáo zhǐ xìng huā cūn.' },
+{ hanzi: '葡萄美酒夜光杯，欲饮琵琶马上催。', pinyin: 'pú táo měi jiǔ yè guāng bēi, yù yǐn pí pá mǎ shàng cuī.' },
+{ hanzi: '人生若只如初见，何事秋风悲画扇。', pinyin: 'rén shēng ruò zhǐ rú chū jiàn, hé shì qiū fēng bēi huà shàn.' },
+{ hanzi: '曾经沧海难为水，除却巫山不是云。', pinyin: 'céng jīng cāng hǎi nán wéi shuǐ, chú què wū shān bù shì yún.' },
+{ hanzi: '问世间情为何物，直教生死相许。', pinyin: 'wèn shì jiān qíng wèi hé wù, zhí jiāo shēng sǐ xiāng xǔ.' },
+{ hanzi: '相见时难别亦难，东风无力百花残。', pinyin: 'xiāng jiàn shí nán bié yì nán, dōng fēng wú lì bǎi huā cán.' },
+{ hanzi: '春蚕到死丝方尽，蜡炬成灰泪始干。', pinyin: 'chūn cán dào sǐ sī fāng jìn, là jù chéng huī lèi shǐ gān.' },
+{ hanzi: '身无彩凤双飞翼，心有灵犀一点通。', pinyin: 'shēn wú cǎi fèng shuāng fēi yì, xīn yǒu líng xī yī diǎn tōng.' },
+{ hanzi: '天长地久有时尽，此恨绵绵无绝期。', pinyin: 'tiān cháng dì jiǔ yǒu shí jìn, cǐ hèn mián mián wú jué qī.' },
+{ hanzi: '抽刀断水水更流，举杯消愁愁更愁。', pinyin: 'chōu dāo duàn shuǐ shuǐ gèng liú, jǔ bēi xiāo chóu chóu gèng chóu.' },
+{ hanzi: '天生一个仙人洞，无限风光在险峰。', pinyin: 'tiān shēng yī gè xiān rén dòng, wú xiàn fēng guāng zài xiǎn fēng.' },
+{ hanzi: '不畏浮云遮望眼，自缘身在最高层。', pinyin: 'bù wèi fú yún zhē wàng yǎn, zì yuán shēn zài zuì gāo céng.' },
+{ hanzi: '江山代有才人出，各领风骚数百年。', pinyin: 'jiāng shān dài yǒu cái rén chū, gè lǐng fēng sāo shù bǎi nián.' },
+{ hanzi: '问渠那得清如许，为有源头活水来。', pinyin: 'wèn qú nà de qīng rú xǔ, wèi yǒu yuán tóu huó shuǐ lái.' },
+{ hanzi: '纸上得来终觉浅，绝知此事要躬行。', pinyin: 'zhǐ shàng dé lái zhōng jué qiǎn, jué zhī cǐ shì yào gōng xíng.' },
+{ hanzi: '不识庐山真面目，只缘身在此山中。', pinyin: 'bù shí lú shān zhēn miàn mù, zhǐ yuán shēn zài cǐ shān zhōng.' },
+{ hanzi: '横看成岭侧成峰，远近高低各不同。', pinyin: 'héng kàn chéng lǐng cè chéng fēng, yuǎn jìn gāo dī gè bù tóng.' },
+{ hanzi: '我寄愁心与明月，随风直到夜郎西。', pinyin: 'wǒ jì chóu xīn yǔ míng yuè, suí fēng zhí dào yè láng xī.' },
+{ hanzi: '何当共剪西窗烛，却话巴山夜雨时。', pinyin: 'hé dāng gòng jiǎn xī chuāng zhú, què huà bā shān yè yǔ shí.' },
+{ hanzi: '春心莫共花争发，一寸相思一寸灰。', pinyin: 'chūn xīn mò gòng huā zhēng fā, yī cùn xiāng sī yī cùn huī.' },
+{ hanzi: '沧海月明珠有泪，蓝田日暖玉生烟。', pinyin: 'cāng hǎi yuè míng zhū yǒu lèi, lán tián rì nuǎn yù shēng yān.' },
+{ hanzi: '此情可待成追忆，只是当时已惘然。', pinyin: 'cǐ qíng kě dài chéng zhuī yì, zhǐ shì dāng shí yǐ wǎng rán.' },
+{ hanzi: '锦瑟无端五十弦，一弦一柱思华年。', pinyin: 'jǐn sè wú duān wǔ shí xián, yī xián yī zhù sī huá nián.' },
+{ hanzi: '庄生晓梦迷蝴蝶，望帝春心托杜鹃。', pinyin: 'zhuāng shēng xiǎo mèng mí hú dié, wàng dì chūn xīn tuō dù juān.' },
+{ hanzi: '日出江花红胜火，春来江水绿如蓝。', pinyin: 'rì chū jiāng huā hóng shèng huǒ, chūn lái jiāng shuǐ lǜ rú lán.' },
+{ hanzi: '野火烧不尽，春风吹又生。', pinyin: 'yě huǒ shāo bù jìn, chūn fēng chuī yòu shēng.' },
+{ hanzi: '坚持就是胜利，努力必有回报。', pinyin: 'jiān chí jiù shì shèng lì, nǔ lì bì yǒu huí bào.' },
+{ hanzi: '每天进步一点点，梦想终将实现。', pinyin: 'měi tiān jìn bù yì diǎn diǎn, mèng xiǎng zhōng jiāng shí xiàn.' },
+{ hanzi: '路漫漫其修远兮，吾将上下而求索。', pinyin: 'lù màn màn qí xiū yuǎn xī, wú jiāng shàng xià ér qiú suǒ.' },
+{ hanzi: '有志者事竟成，苦心人天不负。', pinyin: 'yǒu zhì zhě shì jìng chéng, kǔ xīn rén tiān bù fù.' },
+{ hanzi: '书山有路勤为径，学海无涯苦作舟。', pinyin: 'shū shān yǒu lù qín wéi jìng, xué hǎi wú yá kǔ zuò zhōu.' },
+{ hanzi: '千里之行，始于足下。', pinyin: 'qiān lǐ zhī xíng, shǐ yú zú xià.' },
+{ hanzi: '失败是成功之母，坚持是胜利之父。', pinyin: 'shī bài shì chéng gōng zhī mǔ, jiān chí shì shèng lì zhī fù.' },
+{ hanzi: '知识改变命运，学习成就未来。', pinyin: 'zhī shì gǎi biàn mìng yùn, xué xí chéng jiù wèi lái.' },
+{ hanzi: '少壮不努力，老大徒伤悲。', pinyin: 'shào zhuàng bù nǔ lì, lǎo dà tú shāng bēi.' },
+{ hanzi: '世上无难事，只怕有心人。', pinyin: 'shì shàng wú nán shì, zhǐ pà yǒu xīn rén.' },
+{ hanzi: '业精于勤荒于嬉，行成于思毁于随。', pinyin: 'yè jīng yú qín huāng yú xī, xíng chéng yú sī huǐ yú suí.' },
+{ hanzi: '宝剑锋从磨砺出，梅花香自苦寒来。', pinyin: 'bǎo jiàn fēng cóng mó lì chū, méi huā xiāng zì kǔ hán lái.' },
+{ hanzi: '不经一番寒彻骨，怎得梅花扑鼻香。', pinyin: 'bù jīng yì fān hán chè gǔ, zěn dé méi huā pū bí xiāng.' },
+{ hanzi: '青出于蓝而胜于蓝，冰生于水而寒于水。', pinyin: 'qīng chū yú lán ér shèng yú lán, bīng shēng yú shuǐ ér hán yú shuǐ.' },
+{ hanzi: '读万卷书不如行万里路。', pinyin: 'dú wàn juǎn shū bù rú xíng wàn lǐ lù.' },
+{ hanzi: '天道酬勤，不负有心人。', pinyin: 'tiān dào chóu qín, bù fù yǒu xīn rén.' },
+{ hanzi: '精诚所至，金石为开。', pinyin: 'jīng chéng suǒ zhì, jīn shí wéi kāi.' },
+{ hanzi: '锲而不舍，金石可镂。', pinyin: 'qiè ér bù shě, jīn shí kě lòu.' },
+{ hanzi: '功夫不负有心人。', pinyin: 'gōng fū bù fù yǒu xīn rén.' },
+{ hanzi: '吃得苦中苦，方为人上人。', pinyin: 'chī dé kǔ zhōng kǔ, fāng wéi rén shàng rén.' },
+{ hanzi: '只要功夫深，铁杵磨成针。', pinyin: 'zhǐ yào gōng fū shēn, tiě chǔ mó chéng zhēn.' },
+{ hanzi: '百尺竿头，更进一步。', pinyin: 'bǎi chǐ gān tóu, gèng jìn yī bù.' },
+{ hanzi: '乘风破浪会有时，直挂云帆济沧海。', pinyin: 'chéng fēng pò làng huì yǒu shí, zhí guà yún fān jì cāng hǎi.' },
+{ hanzi: '会当水击三千里，自信人生二百年。', pinyin: 'huì dāng shuǐ jī sān qiān lǐ, zì xìn rén shēng èr bǎi nián.' },
+{ hanzi: '不积跬步，无以至千里。', pinyin: 'bù jī kuǐ bù, wú yǐ zhì qiān lǐ.' },
+{ hanzi: '不积小流，无以成江海。', pinyin: 'bù jī xiǎo liú, wú yǐ chéng jiāng hǎi.' },
+{ hanzi: '天行健，君子以自强不息。', pinyin: 'tiān xíng jiàn, jūn zǐ yǐ zì qiáng bù xī.' },
+{ hanzi: '地势坤，君子以厚德载物。', pinyin: 'dì shì kūn, jūn zǐ yǐ hòu dé zài wù.' },
+{ hanzi: '学然后知不足，教然后知困。', pinyin: 'xué rán hòu zhī bù zú, jiāo rán hòu zhī kùn.' },
+{ hanzi: '知不足然后能自反也。', pinyin: 'zhī bù zú rán hòu néng zì fǎn yě.' },
+{ hanzi: '博学之，审问之，慎思之，明辨之，笃行之。', pinyin: 'bó xué zhī, shěn wèn zhī, shèn sī zhī, míng biàn zhī, dǔ xíng zhī.' },
+{ hanzi: '玉不琢，不成器；人不学，不知道。', pinyin: 'yù bù zhuó, bù chéng qì; rén bù xué, bù zhī dào.' },
+{ hanzi: '博观而约取，厚积而薄发。', pinyin: 'bó guān ér yuē qǔ, hòu jī ér báo fā.' },
+{ hanzi: '山不在高，有仙则名；水不在深，有龙则灵。', pinyin: 'shān bù zài gāo, yǒu xiān zé míng; shuǐ bù zài shēn, yǒu lóng zé líng.' },
+{ hanzi: '黑发不知勤学早，白首方悔读书迟。', pinyin: 'hēi fà bù zhī qín xué zǎo, bái shǒu fāng huǐ dú shū chí.' },
+{ hanzi: '莫等闲，白了少年头，空悲切。', pinyin: 'mò děng xián, bái le shào nián tóu, kōng bēi qiè.' },
+{ hanzi: '三十功名尘与土，八千里路云和月。', pinyin: 'sān shí gōng míng chén yǔ tǔ, bā qiān lǐ lù yún hé yuè.' },
+{ hanzi: '少年易老学难成，一寸光阴不可轻。', pinyin: 'shào nián yì lǎo xué nán chéng, yī cùn guāng yīn bù kě qīng.' },
+{ hanzi: '未觉池塘春草梦，阶前梧叶已秋声。', pinyin: 'wèi jué chí táng chūn cǎo mèng, jiē qián wú yè yǐ qiū shēng.' },
+{ hanzi: '及时当勉励，岁月不待人。', pinyin: 'jí shí dāng miǎn lì, suì yuè bù dài rén.' },
+{ hanzi: '盛年不重来，一日难再晨。', pinyin: 'shèng nián bù chóng lái, yī rì nán zài chén.' },
+{ hanzi: '青春须早为，岂能长少年。', pinyin: 'qīng chūn xū zǎo wéi, qǐ néng cháng shào nián.' },
+{ hanzi: '明日复明日，明日何其多。', pinyin: 'míng rì fù míng rì, míng rì hé qí duō.' },
+{ hanzi: '我生待明日，万事成蹉跎。', pinyin: 'wǒ shēng dài míng rì, wàn shì chéng cuō tuó.' },
+{ hanzi: '世人若被明日累，春去秋来老将至。', pinyin: 'shì rén ruò bèi míng rì lèi, chūn qù qiū lái lǎo jiāng zhì.' },
+{ hanzi: '朝看水东流，暮看日西坠。', pinyin: 'zhāo kàn shuǐ dōng liú, mù kàn rì xī zhuì.' },
+{ hanzi: '百年明日能几何，请君听我明日歌。', pinyin: 'bǎi nián míng rì néng jǐ hé, qǐng jūn tīng wǒ míng rì gē.' },
+{ hanzi: '花开堪折直须折，莫待无花空折枝。', pinyin: 'huā kāi kān zhé zhí xū zhé, mò dài wú huā kōng zhé zhī.' },
+{ hanzi: '健康是人生最大的财富。', pinyin: 'jiàn kāng shì rén shēng zuì dà de cái fù.' },
+{ hanzi: '家和万事兴，人睦百业旺。', pinyin: 'jiā hé wàn shì xìng, rén mù bǎi yè wàng.' },
+{ hanzi: '赠人玫瑰，手有余香。', pinyin: 'zèng rén méi guī, shǒu yǒu yú xiāng.' },
+{ hanzi: '笑一笑，十年少；愁一愁，白了头。', pinyin: 'xiào yī xiào, shí nián shào; chóu yī chóu, bái le tóu.' },
+{ hanzi: '滴水之恩，当涌泉相报。', pinyin: 'dī shuǐ zhī ēn, dāng yǒng quán xiāng bào.' },
+{ hanzi: '忍一时风平浪静，退一步海阔天空。', pinyin: 'rěn yī shí fēng píng làng jìng, tuì yī bù hǎi kuò tiān kōng.' },
+{ hanzi: '近朱者赤，近墨者黑。', pinyin: 'jìn zhū zhě chì, jìn mò zhě hēi.' },
+{ hanzi: '己所不欲，勿施于人。', pinyin: 'jǐ suǒ bù yù, wù shī yú rén.' },
+{ hanzi: '天时不如地利，地利不如人和。', pinyin: 'tiān shí bù rú dì lì, dì lì bù rú rén hé.' },
+{ hanzi: '尺有所短，寸有所长。', pinyin: 'chǐ yǒu suǒ duǎn, cùn yǒu suǒ cháng.' },
+{ hanzi: '金无足赤，人无完人。', pinyin: 'jīn wú zú chì, rén wú wán rén.' },
+{ hanzi: '言必信，行必果。', pinyin: 'yán bì xìn, xíng bì guǒ.' },
+{ hanzi: '学而不思则罔，思而不学则殆。', pinyin: 'xué ér bù sī zé wǎng, sī ér bù xué zé dài.' },
+{ hanzi: '知之为知之，不知为不知，是知也。', pinyin: 'zhī zhī wéi zhī zhī, bù zhī wéi bù zhī, shì zhī yě.' },
+{ hanzi: '三人行，必有我师焉。', pinyin: 'sān rén xíng, bì yǒu wǒ shī yān.' },
+{ hanzi: '当局者迷，旁观者清。', pinyin: 'dāng jú zhě mí, páng guān zhě qīng.' },
+{ hanzi: '善有善报，恶有恶报。', pinyin: 'shàn yǒu shàn bào, è yǒu è bào.' },
+{ hanzi: '公道自在人心。', pinyin: 'gōng dào zì zài rén xīn.' },
+{ hanzi: '人无远虑，必有近忧。', pinyin: 'rén wú yuǎn lǜ, bì yǒu jìn yōu.' },
+{ hanzi: '一言既出，驷马难追。', pinyin: 'yī yán jì chū, sì mǎ nán zhuī.' },
+{ hanzi: '天网恢恢，疏而不漏。', pinyin: 'tiān wǎng huī huī, shū ér bù lòu.' },
+{ hanzi: '有理走遍天下，无理寸步难行。', pinyin: 'yǒu lǐ zǒu biàn tiān xià, wú lǐ cùn bù nán xíng.' },
+{ hanzi: '不听老人言，吃亏在眼前。', pinyin: 'bù tīng lǎo rén yán, chī kuī zài yǎn qián.' },
+{ hanzi: '塞翁失马，焉知非福。', pinyin: 'sài wēng shī mǎ, yān zhī fēi fú.' },
+{ hanzi: '吃一堑，长一智。', pinyin: 'chī yī qiàn, zhǎng yī zhì.' },
+{ hanzi: '良药苦口利于病，忠言逆耳利于行。', pinyin: 'liáng yào kǔ kǒu lì yú bìng, zhōng yán nì ěr lì yú xíng.' },
+{ hanzi: '酒逢知己千杯少，话不投机半句多。', pinyin: 'jiǔ féng zhī jǐ qiān bēi shǎo, huà bù tóu jī bàn jù duō.' },
+{ hanzi: '路遥知马力，日久见人心。', pinyin: 'lù yáo zhī mǎ lì, rì jiǔ jiàn rén xīn.' },
+{ hanzi: '树欲静而风不止，子欲养而亲不待。', pinyin: 'shù yù jìng ér fēng bù zhǐ, zǐ yù yǎng ér qīn bù dài.' },
+{ hanzi: '养不教，父之过；教不严，师之惰。', pinyin: 'yǎng bù jiāo, fù zhī guò; jiāo bù yán, shī zhī duò.' },
+{ hanzi: '玉不琢，不成器；人不学，不知义。', pinyin: 'yù bù zhuó, bù chéng qì; rén bù xué, bù zhī yì.' },
+{ hanzi: '为人性僻耽佳句，语不惊人死不休。', pinyin: 'wéi rén xìng pì dān jiā jù, yǔ bù jīng rén sǐ bù xiū.' },
+{ hanzi: '鸟欲高飞先振翅，人求上进先读书。', pinyin: 'niǎo yù gāo fēi xiān zhèn chì, rén qiú shàng jìn xiān dú shū.' },
+{ hanzi: '书到用时方恨少，事非经过不知难。', pinyin: 'shū dào yòng shí fāng hèn shǎo, shì fēi jīng guò bù zhī nán.' },
+{ hanzi: '临渊羡鱼，不如退而结网。', pinyin: 'lín yuān xiàn yú, bù rú tuì ér jié wǎng.' },
+{ hanzi: '工欲善其事，必先利其器。', pinyin: 'gōng yù shàn qí shì, bì xiān lì qí qì.' },
+{ hanzi: '欲速则不达，见小利则大事不成。', pinyin: 'yù sù zé bù dá, jiàn xiǎo lì zé dà shì bù chéng.' },
+{ hanzi: '小不忍则乱大谋。', pinyin: 'xiǎo bù rěn zé luàn dà móu.' },
+{ hanzi: '海纳百川，有容乃大；壁立千仞，无欲则刚。', pinyin: 'hǎi nà bǎi chuān, yǒu róng nǎi dà; bì lì qiān rèn, wú yù zé gāng.' },
+{ hanzi: '先天下之忧而忧，后天下之乐而乐。', pinyin: 'xiān tiān xià zhī yōu ér yōu, hòu tiān xià zhī lè ér lè.' },
+{ hanzi: '静以修身，俭以养德。', pinyin: 'jìng yǐ xiū shēn, jiǎn yǐ yǎng dé.' },
+{ hanzi: '非淡泊无以明志，非宁静无以致远。', pinyin: 'fēi dàn bó wú yǐ míng zhì, fēi níng jìng wú yǐ zhì yuǎn.' },
+{ hanzi: '夫君子之行，静以修身，俭以养德。', pinyin: 'fū jūn zǐ zhī xíng, jìng yǐ xiū shēn, jiǎn yǐ yǎng dé.' },
+{ hanzi: '非学无以广才，非志无以成学。', pinyin: 'fēi xué wú yǐ guǎng cái, fēi zhì wú yǐ chéng xué.' },
+{ hanzi: '淫慢则不能励精，险躁则不能冶性。', pinyin: 'yín màn zé bù néng lì jīng, xiǎn zào zé bù néng yě xìng.' },
+{ hanzi: '年与时驰，意与日去，遂成枯落，多不接世。', pinyin: 'nián yǔ shí chí, yì yǔ rì qù, suì chéng kū luò, duō bù jiē shì.' },
+{ hanzi: '悲守穷庐，将复何及！', pinyin: 'bēi shǒu qióng lú, jiāng fù hé jí!' },
+{ hanzi: '人非圣贤，孰能无过？', pinyin: 'rén fēi shèng xián, shú néng wú guò?' },
+{ hanzi: '过而能改，善莫大焉。', pinyin: 'guò ér néng gǎi, shàn mò dà yān.' },
+{ hanzi: '知错能改，善莫大焉。', pinyin: 'zhī cuò néng gǎi, shàn mò dà yān.' },
+{ hanzi: '时间就是金钱，效率就是生命。', pinyin: 'shí jiān jiù shì jīn qián, xiào lǜ jiù shì shēng mìng.' },
+{ hanzi: '机会总是留给有准备的人。', pinyin: 'jī huì zǒng shì liú gěi yǒu zhǔn bèi de rén.' },
+{ hanzi: '细节决定成败，态度决定一切。', pinyin: 'xì jié jué dìng chéng bài, tài dù jué dìng yī qiè.' },
+{ hanzi: '只有不断学习，才能不断进步。', pinyin: 'zhǐ yǒu bù duàn xué xí, cái néng bù duàn jìn bù.' },
+{ hanzi: '团结就是力量，合作才能共赢。', pinyin: 'tuán jié jiù shì lì liàng, hé zuò cái néng gòng yíng.' },
+{ hanzi: '创新是企业发展的不竭动力。', pinyin: 'chuàng xīn shì qǐ yè fā zhǎn de bù jié dòng lì.' },
+{ hanzi: '质量是企业的生命线。', pinyin: 'zhì liàng shì qǐ yè de shēng mìng xiàn.' },
+{ hanzi: '诚信是立身之本，立业之基。', pinyin: 'chéng xìn shì lì shēn zhī běn, lì yè zhī jī.' },
+{ hanzi: '客户就是上帝，服务创造价值。', pinyin: 'kè hù jiù shì shàng dì, fú wù chuàng zào jià zhí.' },
+{ hanzi: '知识就是力量，智慧改变人生。', pinyin: 'zhī shì jiù shì lì liàng, zhì huì gǎi biàn rén shēng.' },
+{ hanzi: '梦想还是要有的，万一实现了呢。', pinyin: 'mèng xiǎng hái shì yào yǒu de, wàn yī shí xiàn le ne.' },
+{ hanzi: '活在当下，珍惜眼前。', pinyin: 'huó zài dāng xià, zhēn xī yǎn qián.' },
+{ hanzi: '最好的投资就是投资自己。', pinyin: 'zuì hǎo de tóu zī jiù shì tóu zī zì jǐ.' },
+{ hanzi: '健康是1，其他都是0。', pinyin: 'jiàn kāng shì yī, qí tā dōu shì líng.' },
+{ hanzi: '成功没有捷径，唯有坚持和努力。', pinyin: 'chéng gōng méi yǒu jié jìng, wéi yǒu jiān chí hé nǔ lì.' },
+{ hanzi: '失败并不可怕，可怕的是放弃。', pinyin: 'shī bài bìng bù kě pà, kě pà de shì fàng qì.' },
+{ hanzi: '困难像弹簧，你强它就弱。', pinyin: 'kùn nán xiàng tán huáng, nǐ qiáng tā jiù ruò.' },
+{ hanzi: '没有比人更高的山，没有比脚更长的路。', pinyin: 'méi yǒu bǐ rén gèng gāo de shān, méi yǒu bǐ jiǎo gèng cháng de lù.' },
+{ hanzi: '人生如逆旅，我亦是行人。', pinyin: 'rén shēng rú nì lǚ, wǒ yì shì xíng rén.' },
+{ hanzi: '不忘初心，方得始终。', pinyin: 'bù wàng chū xīn, fāng dé shǐ zhōng.' },
+{ hanzi: '以梦为马，不负韶华。', pinyin: 'yǐ mèng wéi mǎ, bù fù sháo huá.' },
+{ hanzi: '生命不息，奋斗不止。', pinyin: 'shēng mìng bù xī, fèn dòu bù zhǐ.' },
+{ hanzi: '有志者自有千计万计，无志者只感千难万难。', pinyin: 'yǒu zhì zhě zì yǒu qiān jì wàn jì, wú zhì zhě zhǐ gǎn qiān nán wàn nán.' },
+{ hanzi: '阳光总在风雨后，彩虹总在乌云后。', pinyin: 'yáng guāng zǒng zài fēng yǔ hòu, cǎi hóng zǒng zài wū yún hòu.' },
+{ hanzi: '每一个不曾起舞的日子，都是对生命的辜负。', pinyin: 'měi yī gè bù céng qǐ wǔ de rì zi, dōu shì duì shēng mìng de gū fù.' },
+{ hanzi: '我们都在阴沟里，但仍有人仰望星空。', pinyin: 'wǒ men dōu zài yīn gōu lǐ, dàn réng yǒu rén yǎng wàng xīng kōng.' },
+{ hanzi: '生活不止眼前的苟且，还有诗和远方。', pinyin: 'shēng huó bù zhǐ yǎn qián de gǒu qiě, hái yǒu shī hé yuǎn fāng.' },
+{ hanzi: '你若盛开，蝴蝶自来。', pinyin: 'nǐ ruò shèng kāi, hú dié zì lái.' },
+{ hanzi: '一切都是最好的安排。', pinyin: 'yī qiè dōu shì zuì hǎo de ān pái.' },
+{ hanzi: '得之坦然，失之淡然，顺其自然，争其必然。', pinyin: 'dé zhī tǎn rán, shī zhī dàn rán, shùn qí zì rán, zhēng qí bì rán.' },
+{ hanzi: '要么旅行，要么读书，身体和灵魂总有一个在路上。', pinyin: 'yào me lǚ xíng, yào me dú shū, shēn tǐ hé líng hún zǒng yǒu yī gè zài lù shàng.' },
+{ hanzi: '面朝大海，春暖花开。', pinyin: 'miàn cháo dà hǎi, chūn nuǎn huā kāi.' },
+{ hanzi: '从明天起，做一个幸福的人。', pinyin: 'cóng míng tiān qǐ, zuò yī gè xìng fú de rén.' },
+{ hanzi: '喂马，劈柴，周游世界。', pinyin: 'wèi mǎ, pī chái, zhōu yóu shì jiè.' },
+{ hanzi: '我只愿面朝大海，春暖花开。', pinyin: 'wǒ zhǐ yuàn miàn cháo dà hǎi, chūn nuǎn huā kāi.' },
+{ hanzi: '黑夜给了我黑色的眼睛，我却用它寻找光明。', pinyin: 'hēi yè gěi le wǒ hēi sè de yǎn jīng, wǒ què yòng tā xún zhǎo guāng míng.' },
+{ hanzi: '卑鄙是卑鄙者的通行证，高尚是高尚者的墓志铭。', pinyin: 'bēi bǐ shì bēi bǐ zhě de tōng xíng zhèng, gāo shàng shì gāo shàng zhě de mù zhì míng.' },
+{ hanzi: '我相信，那一切都是种子。只有经过埋葬，才有生机。', pinyin: 'wǒ xiāng xìn, nà yī qiè dōu shì zhǒng zi. zhǐ yǒu jīng guò mái zàng, cái yǒu shēng jī.' },
+{ hanzi: '有时候，坚持了你最不想干的事情之后，便可得到你最想要的东西。', pinyin: 'yǒu shí hòu, jiān chí le nǐ zuì bù xiǎng gàn de shì qing zhī hòu, biàn kě dé dào nǐ zuì xiǎng yào de dōng xi.' },
+{ hanzi: '人生没有白走的路，每一步都算数。', pinyin: 'rén shēng méi yǒu bái zǒu de lù, měi yī bù dōu suàn shù.' },
+{ hanzi: '生活不会辜负每一个认真的人。', pinyin: 'shēng huó bù huì gū fù měi yī gè rèn zhēn de rén.' },
+{ hanzi: '努力不一定成功，但不努力一定不会成功。', pinyin: 'nǔ lì bù yī dìng chéng gōng, dàn bù nǔ lì yī dìng bù huì chéng gōng.' },
+{ hanzi: '世上没有绝望的处境，只有对处境绝望的人。', pinyin: 'shì shàng méi yǒu jué wàng de chǔ jìng, zhǐ yǒu duì chǔ jìng jué wàng de rén.' },
+{ hanzi: '一个人的价值，应该看他贡献什么，而不应当看他取得什么。', pinyin: 'yī gè rén de jià zhí, yīng gāi kàn tā gòng xiàn shén me, ér bù yīng dāng kàn tā qǔ dé shén me.' },
+{ hanzi: '生活就像海洋，只有意志坚强的人，才能到达彼岸。', pinyin: 'shēng huó jiù xiàng hǎi yáng, zhǐ yǒu yì zhì jiān qiáng de rén, cái néng dào dá bǐ àn.' },
+{ hanzi: '理想是石，敲出星星之火；理想是火，点燃熄灭的灯。', pinyin: 'lǐ xiǎng shì shí, qiāo chū xīng xīng zhī huǒ; lǐ xiǎng shì huǒ, diǎn rán xī miè de dēng.' },
+{ hanzi: '理想是灯，照亮夜行的路；理想是路，引你走到黎明。', pinyin: 'lǐ xiǎng shì dēng, zhào liàng yè xíng de lù; lǐ xiǎng shì lù, yǐn nǐ zǒu dào lí míng.' },
+{ hanzi: '世界上最快乐的事，莫过于为理想而奋斗。', pinyin: 'shì jiè shàng zuì kuài lè de shì, mò guò yú wèi lǐ xiǎng ér fèn dòu.' },
+{ hanzi: '现实是此岸，理想是彼岸，中间隔着湍急的河流，行动则是架在川上的桥梁。', pinyin: 'xiàn shí shì cǐ àn, lǐ xiǎng shì bǐ àn, zhōng jiān gé zhe tuān jí de hé liú, xíng dòng zé shì jià zài chuān shàng de qiáo liáng.' },
+{ hanzi: '一个人的价值，应当看他贡献什么，而不应当看他取得什么。', pinyin: 'yī gè rén de jià zhí, yīng dāng kàn tā gòng xiàn shén me, ér bù yīng dāng kàn tā qǔ dé shén me.' },
+{ hanzi: '朋友一生一起走，那些日子不再有。', pinyin: 'péng yǒu yī shēng yī qǐ zǒu, nà xiē rì zi bù zài yǒu.' },
+{ hanzi: '一句话，一辈子，一生情，一杯酒。', pinyin: 'yī jù huà, yī bèi zi, yī shēng qíng, yī bēi jiǔ.' },
+{ hanzi: '朋友不曾孤单过，一声朋友你会懂。', pinyin: 'péng yǒu bù céng gū dān guò, yī shēng péng yǒu nǐ huì dǒng.' },
+{ hanzi: '还有伤，还有痛，还要走，还有我。', pinyin: 'hái yǒu shāng, hái yǒu tòng, hái yào zǒu, hái yǒu wǒ.' },
+{ hanzi: '朋友啊朋友，你可曾想起了我？', pinyin: 'péng yǒu a péng yǒu, nǐ kě céng xiǎng qǐ le wǒ?' },
+{ hanzi: '如果你正享受幸福，请你忘记我。', pinyin: 'rú guǒ nǐ zhèng xiǎng shòu xìng fú, qǐng nǐ wàng jì wǒ.' },
+{ hanzi: '如果你正承受不幸，请你告诉我。', pinyin: 'rú guǒ nǐ zhèng chéng shòu bù xìng, qǐng nǐ gào sù wǒ.' },
+{ hanzi: '父爱如山，母爱如海。', pinyin: 'fù ài rú shān, mǔ ài rú hǎi.' },
+{ hanzi: '谁言寸草心，报得三春晖。', pinyin: 'shuí yán cùn cǎo xīn, bào dé sān chūn huī.' },
+{ hanzi: '慈母手中线，游子身上衣。', pinyin: 'cí mǔ shǒu zhōng xiàn, yóu zǐ shēn shàng yī.' },
+{ hanzi: '临行密密缝，意恐迟迟归。', pinyin: 'lín xíng mì mì féng, yì kǒng chí chí guī.' },
+{ hanzi: '父母在，不远游，游必有方。', pinyin: 'fù mǔ zài, bù yuǎn yóu, yóu bì yǒu fāng.' },
+{ hanzi: '父母之年，不可不知也。', pinyin: 'fù mǔ zhī nián, bù kě bù zhī yě.' },
+{ hanzi: '一则以喜，一则以惧。', pinyin: 'yī zé yǐ xǐ, yī zé yǐ jù.' },
+{ hanzi: '今之孝者，是谓能养。', pinyin: 'jīn zhī xiào zhě, shì wèi néng yǎng.' },
+{ hanzi: '至于犬马，皆能有养；不敬，何以别乎？', pinyin: 'zhì yú quǎn mǎ, jiē néng yǒu yǎng; bù jìng, hé yǐ bié hū?' },
+{ hanzi: '色难。有事，弟子服其劳；有酒食，先生馔，曾是以为孝乎？', pinyin: 'sè nán. yǒu shì, dì zǐ fú qí láo; yǒu jiǔ shí, xiān shēng zhuàn, céng shì yǐ wéi xiào hū?' },
+{ hanzi: '老吾老，以及人之老；幼吾幼，以及人之幼。', pinyin: 'lǎo wú lǎo, yǐ jí rén zhī lǎo; yòu wú yòu, yǐ jí rén zhī yòu.' },
+{ hanzi: '家有一老，如有一宝。', pinyin: 'jiā yǒu yī lǎo, rú yǒu yī bǎo.' },
+{ hanzi: '家和万事兴，家齐国安宁。', pinyin: 'jiā hé wàn shì xìng, jiā qí guó ān níng.' },
+{ hanzi: '兄弟姐妹，血浓于水。', pinyin: 'xiōng dì jiě mèi, xuè nóng yú shuǐ.' },
+{ hanzi: '有福同享，有难同当。', pinyin: 'yǒu fú tóng xiǎng, yǒu nàn tóng dāng.' },
+{ hanzi: '患难见真情，日久见人心。', pinyin: 'huàn nàn jiàn zhēn qíng, rì jiǔ jiàn rén xīn.' },
+{ hanzi: '桃花潭水深千尺，不及汪伦送我情。', pinyin: 'táo huā tán shuǐ shēn qiān chǐ, bù jí wāng lún sòng wǒ qíng.' },
+{ hanzi: '劝君更尽一杯酒，西出阳关无故人。', pinyin: 'quàn jūn gèng jìn yī bēi jiǔ, xī chū yáng guān wú gù rén.' },
+{ hanzi: '莫愁前路无知己，天下谁人不识君。', pinyin: 'mò chóu qián lù wú zhī jǐ, tiān xià shuí rén bù shí jūn.' },
+{ hanzi: '人生得一知己足矣，斯世当以同怀视之。', pinyin: 'rén shēng dé yī zhī jǐ zú yǐ, sī shì dāng yǐ tóng huái shì zhī.' },
+{ hanzi: '朋友是冬天的太阳，夏天的凉风。', pinyin: 'péng yǒu shì dōng tiān de tài yáng, xià tiān de liáng fēng.' },
+{ hanzi: '真正的朋友不是在你得意时陪着你的人，而是在你失意时依然陪着你的人。', pinyin: 'zhēn zhèng de péng yǒu bù shì zài nǐ dé yì shí péi zhe nǐ de rén, ér shì zài nǐ shī yì shí yī rán péi zhe nǐ de rén.' },
+{ hanzi: '友情就像一棵树，需要用心去浇灌。', pinyin: 'yǒu qíng jiù xiàng yī kē shù, xū yào yòng xīn qù jiāo guàn.' },
+{ hanzi: '没有朋友的人，就像生活在荒岛上。', pinyin: 'méi yǒu péng yǒu de rén, jiù xiàng shēng huó zài huāng dǎo shàng.' },
+{ hanzi: '朋友是人生的财富，珍惜每一个朋友。', pinyin: 'péng yǒu shì rén shēng de cái fù, zhēn xī měi yī gè péng yǒu.' },
+{ hanzi: '亲情是永恒的，友情是珍贵的。', pinyin: 'qīn qíng shì yǒng héng de, yǒu qíng shì zhēn guì de.' },
+{ hanzi: '血浓于水，亲情最珍贵。', pinyin: 'xuè nóng yú shuǐ, qīn qíng zuì zhēn guì.' },
+{ hanzi: '父母恩情深似海，报答之心永不忘。', pinyin: 'fù mǔ ēn qíng shēn sì hǎi, bào dá zhī xīn yǒng bù wàng.' },
+{ hanzi: '儿女是父母的骄傲，父母是儿女的依靠。', pinyin: 'ér nǚ shì fù mǔ de jiāo ào, fù mǔ shì ér nǚ de yī kào.' },
+{ hanzi: '一家人最重要的是和和睦睦。', pinyin: 'yī jiā rén zuì zhòng yào de shì hé hé mù mù.' },
+{ hanzi: '兄弟姐妹是父母送给我们的最好礼物。', pinyin: 'xiōng dì jiě mèi shì fù mǔ sòng gěi wǒ men de zuì hǎo lǐ wù.' },
+{ hanzi: '有家才有温暖，有爱才有幸福。', pinyin: 'yǒu jiā cái yǒu wēn nuǎn, yǒu ài cái yǒu xìng fú.' },
+{ hanzi: '家是避风港，爱是避风港的灯塔。', pinyin: 'jiā shì bì fēng gǎng, ài shì bì fēng gǎng de dēng tǎ.' },
+{ hanzi: '父母的微笑是儿女最大的幸福。', pinyin: 'fù mǔ de wēi xiào shì ér nǚ zuì dà de xìng fú.' },
+{ hanzi: '陪伴是最长情的告白。', pinyin: 'péi bàn shì zuì cháng qíng de gào bái.' },
+{ hanzi: '常回家看看，父母在等你。', pinyin: 'cháng huí jiā kàn kàn, fù mǔ zài děng nǐ.' },
+{ hanzi: '父母在，家就在。', pinyin: 'fù mǔ zài, jiā jiù zài.' },
+{ hanzi: '没有父母，就没有我们。', pinyin: 'méi yǒu fù mǔ, jiù méi yǒu wǒ men.' },
+{ hanzi: '感谢父母养育之恩，永世难忘。', pinyin: 'gǎn xiè fù mǔ yǎng yù zhī ēn, yǒng shì nán wàng.' },
+{ hanzi: '书籍是人类进步的阶梯。', pinyin: 'shū jí shì rén lèi jìn bù de jiē tī.' },
+{ hanzi: '知识就是力量。', pinyin: 'zhī shí jiù shì lì liàng.' },
+{ hanzi: '时间就是金钱。', pinyin: 'shí jiān jiù shì jīn qián.' },
+{ hanzi: '健康是最大的财富。', pinyin: 'jiàn kāng shì zuì dà de cái fù.' },
+{ hanzi: '家和万事兴。', pinyin: 'jiā hé wàn shì xīng.' },
+{ hanzi: '友谊第一，比赛第二。', pinyin: 'yǒu yì dì yī, bǐ sài dì èr.' },
+{ hanzi: '助人为快乐之本。', pinyin: 'zhù rén wéi kuài lè zhī běn.' }
+];
+
+        // 成语题库 - 300+ 常用成语（不重复）
+        const idioms = [
+{ hanzi: '一曝十寒', pinyin: 'yī pù shí hán' },
+{ hanzi: '一日千里', pinyin: 'yī rì qiān lǐ' },
+{ hanzi: '一马当先', pinyin: 'yī mǎ dāng xiān' },
+{ hanzi: '一帆风顺', pinyin: 'yī fān fēng shùn' },
+{ hanzi: '一心一意', pinyin: 'yī xīn yī yì' },
+{ hanzi: '三心二意', pinyin: 'sān xīn èr yì' },
+{ hanzi: '千方百计', pinyin: 'qiān fāng bǎi jì' },
+{ hanzi: '千钧一发', pinyin: 'qiān jūn yī fà' },
+{ hanzi: '万紫千红', pinyin: 'wàn zǐ qiān hóng' },
+{ hanzi: '万水千山', pinyin: 'wàn shuǐ qiān shān' },
+{ hanzi: '大公无私', pinyin: 'dà gōng wú sī' },
+{ hanzi: '大器晚成', pinyin: 'dà qì wǎn chéng' },
+{ hanzi: '小心翼翼', pinyin: 'xiǎo xīn yì yì' },
+{ hanzi: '心满意足', pinyin: 'xīn mǎn yì zú' },
+{ hanzi: '心甘情愿', pinyin: 'xīn gān qíng yuàn' },
+{ hanzi: '日新月异', pinyin: 'rì xīn yuè yì' },
+{ hanzi: '日月如梭', pinyin: 'rì yuè rú suō' },
+{ hanzi: '天长地久', pinyin: 'tiān cháng dì jiǔ' },
+{ hanzi: '天衣无缝', pinyin: 'tiān yī wú fèng' },
+{ hanzi: '天经地义', pinyin: 'tiān jīng dì yì' },
+{ hanzi: '风吹草动', pinyin: 'fēng chuī cǎo dòng' },
+{ hanzi: '风平浪静', pinyin: 'fēng píng làng jìng' },
+{ hanzi: '风雨同舟', pinyin: 'fēng yǔ tóng zhōu' },
+{ hanzi: '风华正茂', pinyin: 'fēng huá zhèng mào' },
+{ hanzi: '风调雨顺', pinyin: 'fēng tiáo yǔ shùn' },
+{ hanzi: '水滴石穿', pinyin: 'shuǐ dī shí chuān' },
+{ hanzi: '水落石出', pinyin: 'shuǐ luò shí chū' },
+{ hanzi: '水到渠成', pinyin: 'shuǐ dào qú chéng' },
+{ hanzi: '水涨船高', pinyin: 'shuǐ zhǎng chuán gāo' },
+{ hanzi: '山清水秀', pinyin: 'shān qīng shuǐ xiù' },
+{ hanzi: '山高水长', pinyin: 'shān gāo shuǐ cháng' },
+{ hanzi: '山穷水尽', pinyin: 'shān qióng shuǐ jìn' },
+{ hanzi: '山珍海味', pinyin: 'shān zhēn hǎi wèi' },
+{ hanzi: '海阔天空', pinyin: 'hǎi kuò tiān kōng' },
+{ hanzi: '海市蜃楼', pinyin: 'hǎi shì shèn lóu' },
+{ hanzi: '海纳百川', pinyin: 'hǎi nà bǎi chuān' },
+{ hanzi: '海底捞月', pinyin: 'hǎi dǐ lāo yuè' },
+{ hanzi: '龙飞凤舞', pinyin: 'lóng fēi fèng wǔ' },
+{ hanzi: '龙马精神', pinyin: 'lóng mǎ jīng shén' },
+{ hanzi: '龙潭虎穴', pinyin: 'lóng tán hǔ xué' },
+{ hanzi: '虎头蛇尾', pinyin: 'hǔ tóu shé wěi' },
+{ hanzi: '虎视眈眈', pinyin: 'hǔ shì dān dān' },
+{ hanzi: '虎口余生', pinyin: 'hǔ kǒu yú shēng' },
+{ hanzi: '狼吞虎咽', pinyin: 'láng tūn hǔ yàn' },
+{ hanzi: '狼子野心', pinyin: 'láng zǐ yě xīn' },
+{ hanzi: '狼心狗肺', pinyin: 'láng xīn gǒu fèi' },
+{ hanzi: '狐假虎威', pinyin: 'hú jiǎ hǔ wēi' },
+{ hanzi: '狐朋狗友', pinyin: 'hú péng gǒu yǒu' },
+{ hanzi: '狗急跳墙', pinyin: 'gǒu jí tiào qiáng' },
+{ hanzi: '狗仗人势', pinyin: 'gǒu zhàng rén shì' },
+{ hanzi: '鸡飞狗跳', pinyin: 'jī fēi gǒu tiào' },
+{ hanzi: '鸡犬不宁', pinyin: 'jī quǎn bù níng' },
+{ hanzi: '鸡毛蒜皮', pinyin: 'jī máo suàn pí' },
+{ hanzi: '鹤立鸡群', pinyin: 'hè lì jī qún' },
+{ hanzi: '鹤发童颜', pinyin: 'hè fà tóng yán' },
+{ hanzi: '鸟语花香', pinyin: 'niǎo yǔ huā xiāng' },
+{ hanzi: '鸟尽弓藏', pinyin: 'niǎo jìn gōng cáng' },
+{ hanzi: '鱼目混珠', pinyin: 'yú mù hùn zhū' },
+{ hanzi: '鱼龙混杂', pinyin: 'yú lóng hùn zá' },
+{ hanzi: '鱼水情深', pinyin: 'yú shuǐ qíng shēn' },
+{ hanzi: '学以致用', pinyin: 'xué yǐ zhì yòng' },
+{ hanzi: '学富五车', pinyin: 'xué fù wǔ chē' },
+{ hanzi: '学无止境', pinyin: 'xué wú zhǐ jìng' },
+{ hanzi: '学而不厌', pinyin: 'xué ér bù yàn' },
+{ hanzi: '温故知新', pinyin: 'wēn gù zhī xīn' },
+{ hanzi: '诲人不倦', pinyin: 'huì rén bù juàn' },
+{ hanzi: '勤能补拙', pinyin: 'qín néng bǔ zhuō' },
+{ hanzi: '笨鸟先飞', pinyin: 'bèn niǎo xiān fēi' },
+{ hanzi: '熟能生巧', pinyin: 'shú néng shēng qiǎo' },
+{ hanzi: '举一反三', pinyin: 'jǔ yī fǎn sān' },
+{ hanzi: '融会贯通', pinyin: 'róng huì guàn tōng' },
+{ hanzi: '循序渐进', pinyin: 'xún xù jiàn jìn' },
+{ hanzi: '孜孜不倦', pinyin: 'zī zī bù juàn' },
+{ hanzi: '锲而不舍', pinyin: 'qiè ér bù shě' },
+{ hanzi: '持之以恒', pinyin: 'chí zhī yǐ héng' },
+{ hanzi: '坚持不懈', pinyin: 'jiān chí bù xiè' },
+{ hanzi: '发愤图强', pinyin: 'fā fèn tú qiáng' },
+{ hanzi: '自强不息', pinyin: 'zì qiáng bù xī' },
+{ hanzi: '力争上游', pinyin: 'lì zhēng shàng yóu' },
+{ hanzi: '名列前茅', pinyin: 'míng liè qián máo' },
+{ hanzi: '出类拔萃', pinyin: 'chū lèi bá cuì' },
+{ hanzi: '才华横溢', pinyin: 'cái huá héng yì' },
+{ hanzi: '博学多才', pinyin: 'bó xué duō cái' },
+{ hanzi: '才高八斗', pinyin: 'cái gāo bā dǒu' },
+{ hanzi: '满腹经纶', pinyin: 'mǎn fù jīng lún' },
+{ hanzi: '出口成章', pinyin: 'chū kǒu chéng zhāng' },
+{ hanzi: '过目不忘', pinyin: 'guò mù bù wàng' },
+{ hanzi: '过目成诵', pinyin: 'guò mù chéng sòng' },
+{ hanzi: '闻一知十', pinyin: 'wén yī zhī shí' },
+{ hanzi: '触类旁通', pinyin: 'chù lèi páng tōng' },
+{ hanzi: '潜心贯注', pinyin: 'qián xīn guàn zhù' },
+{ hanzi: '专心致志', pinyin: 'zhuān xīn zhì zhì' },
+{ hanzi: '聚精会神', pinyin: 'jù jīng huì shén' },
+{ hanzi: '全神贯注', pinyin: 'quán shén guàn zhù' },
+{ hanzi: '一丝不苟', pinyin: 'yī sī bù gǒu' },
+{ hanzi: '精益求精', pinyin: 'jīng yì qiú jīng' },
+{ hanzi: '孜孜以求', pinyin: 'zī zī yǐ qiú' },
+{ hanzi: '不耻下问', pinyin: 'bù chǐ xià wèn' },
+{ hanzi: '虚心好学', pinyin: 'xū xīn hào xué' },
+{ hanzi: '好学不倦', pinyin: 'hào xué bù juàn' },
+{ hanzi: '学海无涯', pinyin: 'xué hǎi wú yá' },
+{ hanzi: '书山有路', pinyin: 'shū shān yǒu lù' },
+{ hanzi: '悬梁刺股', pinyin: 'xuán liáng cì gǔ' },
+{ hanzi: '凿壁偷光', pinyin: 'záo bì tōu guāng' },
+{ hanzi: '囊萤映雪', pinyin: 'náng yíng yìng xuě' },
+{ hanzi: '闻鸡起舞', pinyin: 'wén jī qǐ wǔ' },
+{ hanzi: '废寝忘食', pinyin: 'fèi qǐn wàng shí' },
+{ hanzi: '夜以继日', pinyin: 'yè yǐ jì rì' },
+{ hanzi: '通宵达旦', pinyin: 'tōng xiāo dá dàn' },
+{ hanzi: '呕心沥血', pinyin: 'ǒu xīn lì xuè' },
+{ hanzi: '殚精竭虑', pinyin: 'dān jīng jié lǜ' },
+{ hanzi: '苦心孤诣', pinyin: 'kǔ xīn gū yì' },
+{ hanzi: '披星戴月', pinyin: 'pī xīng dài yuè' },
+{ hanzi: '兢兢业业', pinyin: 'jīng jīng yè yè' },
+{ hanzi: '勤勤恳恳', pinyin: 'qín qín kěn kěn' },
+{ hanzi: '任劳任怨', pinyin: 'rèn láo rèn yuàn' },
+{ hanzi: '克勤克俭', pinyin: 'kè qín kè jiǎn' },
+{ hanzi: '埋头苦干', pinyin: 'mái tóu kǔ gàn' },
+{ hanzi: '人生如梦', pinyin: 'rén shēng rú mèng' },
+{ hanzi: '如梦初醒', pinyin: 'rú mèng chū xǐng' },
+{ hanzi: '恍然大悟', pinyin: 'huǎng rán dà wù' },
+{ hanzi: '茅塞顿开', pinyin: 'máo sè dùn kāi' },
+{ hanzi: '豁然开朗', pinyin: 'huò rán kāi lǎng' },
+{ hanzi: '心领神会', pinyin: 'xīn lǐng shén huì' },
+{ hanzi: '心有灵犀', pinyin: 'xīn yǒu líng xī' },
+{ hanzi: '志同道合', pinyin: 'zhì tóng dào hé' },
+{ hanzi: '情投意合', pinyin: 'qíng tóu yì hé' },
+{ hanzi: '心心相印', pinyin: 'xīn xīn xiāng yìn' },
+{ hanzi: '肝胆相照', pinyin: 'gān dǎn xiāng zhào' },
+{ hanzi: '同甘共苦', pinyin: 'tóng gān gòng kǔ' },
+{ hanzi: '患难与共', pinyin: 'huàn nàn yǔ gòng' },
+{ hanzi: '生死与共', pinyin: 'shēng sǐ yǔ gòng' },
+{ hanzi: '休戚相关', pinyin: 'xiū qī xiāng guān' },
+{ hanzi: '情同手足', pinyin: 'qíng tóng shǒu zú' },
+{ hanzi: '相亲相爱', pinyin: 'xiāng qīn xiāng ài' },
+{ hanzi: '相敬如宾', pinyin: 'xiāng jìng rú bīn' },
+{ hanzi: '相濡以沫', pinyin: 'xiāng rú yǐ mò' },
+{ hanzi: '白头偕老', pinyin: 'bái tóu xié lǎo' },
+{ hanzi: '比翼双飞', pinyin: 'bǐ yì shuāng fēi' },
+{ hanzi: '伉俪情深', pinyin: 'kàng lì qíng shēn' },
+{ hanzi: '恩爱夫妻', pinyin: 'ēn ài fū qī' },
+{ hanzi: '天作之合', pinyin: 'tiān zuò zhī hé' },
+{ hanzi: '珠联璧合', pinyin: 'zhū lián bì hé' },
+{ hanzi: '金玉良缘', pinyin: 'jīn yù liáng yuán' },
+{ hanzi: '青梅竹马', pinyin: 'qīng méi zhú mǎ' },
+{ hanzi: '两小无猜', pinyin: 'liǎng xiǎo wú cāi' },
+{ hanzi: '一见钟情', pinyin: 'yī jiàn zhōng qíng' },
+{ hanzi: '一见如故', pinyin: 'yī jiàn rú gù' },
+{ hanzi: '志趣相投', pinyin: 'zhì qù xiāng tóu' },
+{ hanzi: '意气相投', pinyin: 'yì qì xiāng tóu' },
+{ hanzi: '形影不离', pinyin: 'xíng yǐng bù lí' },
+{ hanzi: '如胶似漆', pinyin: 'rú jiāo sì qī' },
+{ hanzi: '亲密无间', pinyin: 'qīn mì wú jiàn' },
+{ hanzi: '情深似海', pinyin: 'qíng shēn sì hǎi' },
+{ hanzi: '情真意切', pinyin: 'qíng zhēn yì qiè' },
+{ hanzi: '情深义重', pinyin: 'qíng shēn yì zhòng' },
+{ hanzi: '海誓山盟', pinyin: 'hǎi shì shān méng' },
+{ hanzi: '山盟海誓', pinyin: 'shān méng hǎi shì' },
+{ hanzi: '情深意重', pinyin: 'qíng shēn yì zhòng' },
+{ hanzi: '情深意切', pinyin: 'qíng shēn yì qiè' },
+{ hanzi: '一见倾心', pinyin: 'yī jiàn qīng xīn' },
+{ hanzi: '一往情深', pinyin: 'yī wǎng qíng shēn' },
+{ hanzi: '不辞辛苦', pinyin: 'bù cí xīn kǔ' },
+{ hanzi: '艰苦朴素', pinyin: 'jiān kǔ pǔ sù' },
+{ hanzi: '艰苦奋斗', pinyin: 'jiān kǔ fèn dòu' },
+{ hanzi: '吃苦耐劳', pinyin: 'chī kǔ nài láo' },
+{ hanzi: '竭尽全力', pinyin: 'jié jìn quán lì' },
+{ hanzi: '全力以赴', pinyin: 'quán lì yǐ fù' },
+{ hanzi: '不遗余力', pinyin: 'bù yí yú lì' },
+{ hanzi: '尽心尽力', pinyin: 'jìn xīn jìn lì' },
+{ hanzi: '竭诚尽力', pinyin: 'jié chéng jìn lì' },
+{ hanzi: '全心全意', pinyin: 'quán xīn quán yì' },
+{ hanzi: '百折不挠', pinyin: 'bǎi zhé bù náo' },
+{ hanzi: '百炼成钢', pinyin: 'bǎi liàn chéng gāng' },
+{ hanzi: '百战百胜', pinyin: 'bǎi zhàn bǎi shèng' },
+{ hanzi: '百尺竿头', pinyin: 'bǎi chǐ gān tóu' },
+{ hanzi: '千锤百炼', pinyin: 'qiān chuí bǎi liàn' },
+{ hanzi: '千辛万苦', pinyin: 'qiān xīn wàn kǔ' },
+{ hanzi: '千难万险', pinyin: 'qiān nán wàn xiǎn' },
+{ hanzi: '千山万水', pinyin: 'qiān shān wàn shuǐ' },
+{ hanzi: '千言万语', pinyin: 'qiān yán wàn yǔ' },
+{ hanzi: '千军万马', pinyin: 'qiān jūn wàn mǎ' },
+{ hanzi: '千头万绪', pinyin: 'qiān tóu wàn xù' },
+{ hanzi: '千真万确', pinyin: 'qiān zhēn wàn què' },
+{ hanzi: '千变万化', pinyin: 'qiān biàn wàn huà' },
+{ hanzi: '千差万别', pinyin: 'qiān chā wàn bié' },
+{ hanzi: '千呼万唤', pinyin: 'qiān hū wàn huàn' },
+{ hanzi: '千载难逢', pinyin: 'qiān zǎi nán féng' },
+{ hanzi: '千秋万代', pinyin: 'qiān qiū wàn dài' },
+{ hanzi: '千家万户', pinyin: 'qiān jiā wàn hù' },
+{ hanzi: '千篇一律', pinyin: 'qiān piān yī lǜ' },
+{ hanzi: '千奇百怪', pinyin: 'qiān qí bǎi guài' },
+{ hanzi: '千姿百态', pinyin: 'qiān zī bǎi tài' },
+{ hanzi: '千疮百孔', pinyin: 'qiān chuāng bǎi kǒng' },
+{ hanzi: '千丝万缕', pinyin: 'qiān sī wàn lǚ' },
+{ hanzi: '助人为乐', pinyin: 'zhù rén wéi lè' },
+{ hanzi: '乐善好施', pinyin: 'lè shàn hào shī' },
+{ hanzi: '见义勇为', pinyin: 'jiàn yì yǒng wéi' },
+{ hanzi: '舍己为人', pinyin: 'shě jǐ wèi rén' },
+{ hanzi: '公而忘私', pinyin: 'gōng ér wàng sī' },
+{ hanzi: '先人后己', pinyin: 'xiān rén hòu jǐ' },
+{ hanzi: '大义凛然', pinyin: 'dà yì lǐn rán' },
+{ hanzi: '光明磊落', pinyin: 'guāng míng lěi luò' },
+{ hanzi: '光明正大', pinyin: 'guāng míng zhèng dà' },
+{ hanzi: '堂堂正正', pinyin: 'táng táng zhèng zhèng' },
+{ hanzi: '正大光明', pinyin: 'zhèng dà guāng míng' },
+{ hanzi: '正气凛然', pinyin: 'zhèng qì lǐn rán' },
+{ hanzi: '刚正不阿', pinyin: 'gāng zhèng bù ē' },
+{ hanzi: '铁面无私', pinyin: 'tiě miàn wú sī' },
+{ hanzi: '执法如山', pinyin: 'zhí fǎ rú shān' },
+{ hanzi: '严于律己', pinyin: 'yán yú lǜ jǐ' },
+{ hanzi: '宽以待人', pinyin: 'kuān yǐ dài rén' },
+{ hanzi: '宽宏大量', pinyin: 'kuān hóng dà liàng' },
+{ hanzi: '豁达大度', pinyin: 'huò dá dà dù' },
+{ hanzi: '虚怀若谷', pinyin: 'xū huái ruò gǔ' },
+{ hanzi: '谦虚谨慎', pinyin: 'qiān xū jǐn shèn' },
+{ hanzi: '不骄不躁', pinyin: 'bù jiāo bù zào' },
+{ hanzi: '戒骄戒躁', pinyin: 'jiè jiāo jiè zào' },
+{ hanzi: '不卑不亢', pinyin: 'bù bēi bù kàng' },
+{ hanzi: '不亢不卑', pinyin: 'bù kàng bù bēi' },
+{ hanzi: '宠辱不惊', pinyin: 'chǒng rǔ bù jīng' },
+{ hanzi: '淡泊明志', pinyin: 'dàn bó míng zhì' },
+{ hanzi: '宁静致远', pinyin: 'níng jìng zhì yuǎn' },
+{ hanzi: '安贫乐道', pinyin: 'ān pín lè dào' },
+{ hanzi: '知足常乐', pinyin: 'zhī zú cháng lè' },
+{ hanzi: '随遇而安', pinyin: 'suí yù ér ān' },
+{ hanzi: '与世无争', pinyin: 'yǔ shì wú zhēng' },
+{ hanzi: '随波逐流', pinyin: 'suí bō zhú liú' },
+{ hanzi: '明哲保身', pinyin: 'míng zhé bǎo shēn' },
+{ hanzi: '洁身自好', pinyin: 'jié shēn zì hào' },
+{ hanzi: '独善其身', pinyin: 'dú shàn qí shēn' },
+{ hanzi: '与人为善', pinyin: 'yǔ rén wéi shàn' },
+{ hanzi: '和蔼可亲', pinyin: 'hé ǎi kě qīn' },
+{ hanzi: '平易近人', pinyin: 'píng yì jìn rén' },
+{ hanzi: '和颜悦色', pinyin: 'hé yán yuè sè' },
+{ hanzi: '笑容可掬', pinyin: 'xiào róng kě jū' },
+{ hanzi: '笑逐颜开', pinyin: 'xiào zhú yán kāi' },
+{ hanzi: '眉开眼笑', pinyin: 'méi kāi yǎn xiào' },
+{ hanzi: '喜笑颜开', pinyin: 'xǐ xiào yán kāi' },
+{ hanzi: '喜气洋洋', pinyin: 'xǐ qì yáng yáng' },
+{ hanzi: '喜出望外', pinyin: 'xǐ chū wàng wài' },
+{ hanzi: '欣喜若狂', pinyin: 'xīn xǐ ruò kuáng' },
+{ hanzi: '心花怒放', pinyin: 'xīn huā nù fàng' },
+{ hanzi: '欢天喜地', pinyin: 'huān tiān xǐ dì' },
+{ hanzi: '兴高采烈', pinyin: 'xìng gāo cǎi liè' },
+{ hanzi: '手舞足蹈', pinyin: 'shǒu wǔ zú dǎo' },
+{ hanzi: '载歌载舞', pinyin: 'zài gē zài wǔ' },
+{ hanzi: '欢声笑语', pinyin: 'huān shēng xiào yǔ' },
+{ hanzi: '乐不可支', pinyin: 'lè bù kě zhī' },
+{ hanzi: '乐不思蜀', pinyin: 'lè bù sī shǔ' },
+{ hanzi: '乐在其中', pinyin: 'lè zài qí zhōng' },
+{ hanzi: '自得其乐', pinyin: 'zì dé qí lè' },
+{ hanzi: '苦中作乐', pinyin: 'kǔ zhōng zuò lè' },
+{ hanzi: '牛角挂书', pinyin: 'niú jiǎo guà shū' },
+{ hanzi: '韦编三绝', pinyin: 'wéi biān sān jué' },
+{ hanzi: '程门立雪', pinyin: 'chéng mén lì xuě' },
+{ hanzi: '枕戈待旦', pinyin: 'zhěn gē dài dàn' },
+{ hanzi: '卧薪尝胆', pinyin: 'wò xīn cháng dǎn' },
+{ hanzi: '破釜沉舟', pinyin: 'pò fǔ chén zhōu' },
+{ hanzi: '背水一战', pinyin: 'bèi shuǐ yī zhàn' },
+{ hanzi: '孤注一掷', pinyin: 'gū zhù yī zhì' },
+{ hanzi: '志在千里', pinyin: 'zhì zài qiān lǐ' },
+{ hanzi: '老骥伏枥', pinyin: 'lǎo jì fú lì' },
+{ hanzi: '壮心不已', pinyin: 'zhuàng xīn bù yǐ' },
+{ hanzi: '鸿鹄之志', pinyin: 'hóng hú zhī zhì' },
+{ hanzi: '青云之志', pinyin: 'qīng yún zhī zhì' },
+{ hanzi: '雄心勃勃', pinyin: 'xióng xīn bó bó' },
+{ hanzi: '壮志凌云', pinyin: 'zhuàng zhì líng yún' },
+{ hanzi: '气吞山河', pinyin: 'qì tūn shān hé' },
+{ hanzi: '气贯长虹', pinyin: 'qì guàn cháng hóng' },
+{ hanzi: '神采奕奕', pinyin: 'shén cǎi yì yì' },
+{ hanzi: '精神抖擞', pinyin: 'jīng shén dǒu sǒu' },
+{ hanzi: '容光焕发', pinyin: 'róng guāng huàn fā' },
+{ hanzi: '生龙活虎', pinyin: 'shēng lóng huó hǔ' },
+{ hanzi: '朝气蓬勃', pinyin: 'zhāo qì péng bó' },
+{ hanzi: '精力充沛', pinyin: 'jīng lì chōng pèi' },
+{ hanzi: '虎虎生威', pinyin: 'hǔ hǔ shēng wēi' },
+{ hanzi: '威风凛凛', pinyin: 'wēi fēng lǐn lǐn' },
+{ hanzi: '英姿飒爽', pinyin: 'yīng zī sà shuǎng' },
+{ hanzi: '飒爽英姿', pinyin: 'sà shuǎng yīng zī' },
+{ hanzi: '仪表堂堂', pinyin: 'yí biǎo táng táng' },
+{ hanzi: '一表人才', pinyin: 'yī biǎo rén cái' },
+{ hanzi: '相貌堂堂', pinyin: 'xiàng mào táng táng' },
+{ hanzi: '眉清目秀', pinyin: 'méi qīng mù xiù' },
+{ hanzi: '明眸皓齿', pinyin: 'míng móu hào chǐ' },
+{ hanzi: '唇红齿白', pinyin: 'chún hóng chǐ bái' },
+{ hanzi: '冰肌玉骨', pinyin: 'bīng jī yù gǔ' },
+{ hanzi: '沉鱼落雁', pinyin: 'chén yú luò yàn' },
+{ hanzi: '闭月羞花', pinyin: 'bì yuè xiū huā' },
+{ hanzi: '倾国倾城', pinyin: 'qīng guó qīng chéng' },
+{ hanzi: '国色天香', pinyin: 'guó sè tiān xiāng' },
+{ hanzi: '花容月貌', pinyin: 'huā róng yuè mào' },
+{ hanzi: '如花似玉', pinyin: 'rú huā sì yù' },
+{ hanzi: '天生丽质', pinyin: 'tiān shēng lì zhì' },
+{ hanzi: '窈窕淑女', pinyin: 'yǎo tiǎo shū nǚ' },
+{ hanzi: '君子好逑', pinyin: 'jūn zǐ hǎo qiú' },
+{ hanzi: '才子佳人', pinyin: 'cái zǐ jiā rén' },
+{ hanzi: '鹤鸣九皋', pinyin: 'hè míng jiǔ gāo' },
+{ hanzi: '鸾凤和鸣', pinyin: 'luán fèng hé míng' },
+{ hanzi: '鸾翔凤集', pinyin: 'luán xiáng fèng jí' }
+];
+
+        // ============================================
+        // 应用程序状态和配置
+        // ============================================
+        
+        let appState = {
+            currentMode: 'single',
+            currentQuestions: [],
+            currentIndex: 0,
+            score: 0,
+            correctAnswers: 0,
+            totalQuestions: 0,
+            questionsPerRound: 0,
+            startTime: null,
+            elapsedTime: 0,
+            timerInterval: null,
+            showHint: true,
+            difficulty: 'easy',
+            errorList: [],
+            stats: {
+                totalPractice: 0,
+                totalCorrect: 0,
+                totalErrors: 0,
+                bestScore: 0,
+                averageAccuracy: 0
+            }
+        };
+        
+        // 音乐播放器状态
+        let musicPlayer = {
+            audio: null,
+            isPlaying: false,
+            isEnabled: true,
+            currentTrack: 0,
+            volume: 0.5,
+                        tracks: [
+                { name: '正确提示音', path: 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tUxAAD8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEYWJhY2sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=False)'
+            ],
+            init: function() {
+                if (this.isEnabled) {
+                    this.audio = new Audio();
+                    this.audio.volume = this.volume;
+                    this.audio.addEventListener('ended', () => {
+                        this.nextTrack();
+                    });
+                    console.log('音乐播放器初始化完成（离线版本）');
+                }
+            },
+                { name: '专注学习', path: 'https://assets.mixkit.co/music/preview/mixkit-driving-ambition-32.mp3' }
+            ],
+            init: function() {
+                if (this.isEnabled) {
+                    this.audio = new Audio();
+                    this.audio.volume = this.volume;
+                    this.audio.addEventListener('ended', () => {
+                        this.nextTrack();
+                    });
+                    console.log('音乐播放器初始化完成（在线版本）');
+                }
+            },
+                { name: '专注学习', path: 'https://assets.mixkit.co/music/preview/mixkit-driving-ambition-32.mp3' }
+            ],
+            init: function() {
+                if (this.isEnabled) {
+                    this.audio = new Audio();
+                    this.audio.volume = this.volume;
+                    this.audio.addEventListener('ended', () => {
+                        this.nextTrack();
+                    });
+                    console.log('🎵 音乐播放器初始化完成（在线版本）');
+                }
+            },
+                { name: '清晰', path: '' }
+            ]
+        };
+
+        // ============================================
+        // 工具函数
+        // ============================================
+        
+        // 获取指定模式的所有题目
+        function getAllQuestions(mode) {
+            switch(mode) {
+                case 'single':
+                    return [...singleWords];
+                case 'triple':
+                    return [...tripleWords];
+                case 'sentence':
+                    return [...sentences];
+                case 'idiom':
+                    return [...idioms];
+                default:
+                    return [...singleWords];
+            }
+        }
+
+        // 随机打乱数组
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 获取当前模式的题库信息
+        function getLibraryInfo(mode) {
+            const allQuestions = getAllQuestions(mode);
+            const count = allQuestions.length;
+            
+            switch(mode) {
+                case 'single':
+                    return {
+                        title: '单字题库',
+                        count: `${count} 汉字`,
+                        desc: '覆盖常用汉字，包含多音字示例',
+                        color: '#3498db'
+                    };
+                case 'triple':
+                    return {
+                        title: '三字题库',
+                        count: `${count} 词语`,
+                        desc: '常用三字词语、名词和短语',
+                        color: '#2ecc71'
+                    };
+                case 'sentence':
+                    return {
+                        title: '句子题库',
+                        count: `${count} 句子`,
+                        desc: '日常短句、古诗词名句、励志短句',
+                        color: '#9b59b6'
+                    };
+                case 'idiom':
+                    return {
+                        title: '成语题库',
+                        count: `${count} 成语`,
+                        desc: '常用四字成语，包含多音字',
+                        color: '#f39c12'
+                    };
+                default:
+                    return {
+                        title: '单字题库',
+                        count: `${count} 汉字`,
+                        desc: '覆盖常用汉字，包含多音字示例',
+                        color: '#3498db'
+                    };
+            }
+        }
+
+        // 根据上下文获取正确的拼音
+        function getContextualPinyin(hanzi, context) {
+            if (polyphoneMap[hanzi]) {
+                for (const [phrase, pinyin] of Object.entries(polyphoneMap[hanzi])) {
+                    if (context.includes(phrase)) {
+                        return pinyin;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // 清理拼音字符串中的标点符号
+        function cleanPinyinString(pinyinStr) {
+            // 将拼音字符串按空格分割
+            const parts = pinyinStr.split(' ');
+            const cleanedParts = [];
+            
+            for (const part of parts) {
+                // 移除拼音末尾的标点符号
+                let cleaned = part.replace(/[，。！？；："'、…《》（）【】［］｛｝「」『』<>〔〕〖〗·．·•～—.,!?;:]+$/, '');
+                if (cleaned) {
+                    cleanedParts.push(cleaned);
+                }
+            }
+            
+            return cleanedParts;
+        }
+        
+        // ============================================
+        // 音乐控制函数
+        // ============================================
+        
+        // 初始化音乐播放器
+        function initMusicPlayer() {
+            if (!musicPlayer.audio) {
+                musicPlayer.audio = new Audio();
+                musicPlayer.audio.volume = musicPlayer.volume;
+                musicPlayer.audio.loop = true; // 循环播放
+                
+                // 音频加载完成时更新显示
+                musicPlayer.audio.addEventListener('loadeddata', function() {
+                    updateMusicDisplay();
+                });
+                
+                // 音频结束时切换到下一首
+                musicPlayer.audio.addEventListener('ended', function() {
+                    nextMusic();
+                });
+                
+                // 加载第一首音乐
+                loadCurrentTrack();
+            }
+            
+            updateMusicDisplay();
+        }
+        
+        // 加载当前曲目
+        function loadCurrentTrack() {
+            if (musicPlayer.tracks.length === 0) return;
+            
+            const track = musicPlayer.tracks[musicPlayer.currentTrack];
+            musicPlayer.audio.src = track.path;
+            document.getElementById('miniCurrentMusic').textContent = track.name;
+            
+            if (musicPlayer.isEnabled && musicPlayer.isPlaying) {
+                musicPlayer.audio.play().catch(e => {
+                    console.log('自动播放被阻止，需要用户交互');
+                });
+            }
+        }
+        
+
+        
+        // ============================================
+        // 小型音乐控制栏函数
+        // ============================================
+        
+        // 切换音乐开关
+        function toggleMusic() {
+            musicPlayer.isEnabled = !musicPlayer.isEnabled;
+            const musicIcon = document.getElementById('miniMusicIcon');
+            
+            if (musicPlayer.isEnabled) {
+                musicIcon.textContent = '🎵';
+                if (musicPlayer.isPlaying) {
+                    musicPlayer.audio.play().catch(e => {
+                        console.log('播放失败');
+                    });
+                }
+            } else {
+                musicIcon.textContent = '🔇';
+                musicPlayer.audio.pause();
+            }
+        }
+        
+        // 切换播放/暂停
+        function togglePlayPause() {
+            if (!musicPlayer.isEnabled) return;
+            
+            musicPlayer.isPlaying = !musicPlayer.isPlaying;
+            const playPauseIcon = document.getElementById('miniPlayPauseIcon');
+            
+            if (musicPlayer.isPlaying) {
+                musicPlayer.audio.play().catch(e => {
+                    console.log('播放失败');
+                    musicPlayer.isPlaying = false;
+                    playPauseIcon.textContent = '▶️';
+                });
+                playPauseIcon.textContent = '⏸️';
+            } else {
+                musicPlayer.audio.pause();
+                playPauseIcon.textContent = '▶️';
+            }
+        }
+        
+        // 上一首音乐
+        function prevMusic() {
+            if (musicPlayer.tracks.length === 0) return;
+            
+            musicPlayer.currentTrack--;
+            if (musicPlayer.currentTrack < 0) {
+                musicPlayer.currentTrack = musicPlayer.tracks.length - 1;
+            }
+            
+            loadCurrentTrack();
+            if (musicPlayer.isEnabled && musicPlayer.isPlaying) {
+                musicPlayer.audio.play().catch(e => {
+                    console.log('播放失败');
+                });
+            }
+        }
+        
+        // 下一首音乐
+        function nextMusic() {
+            if (musicPlayer.tracks.length === 0) return;
+            
+            musicPlayer.currentTrack++;
+            if (musicPlayer.currentTrack >= musicPlayer.tracks.length) {
+                musicPlayer.currentTrack = 0;
+            }
+            
+            loadCurrentTrack();
+            if (musicPlayer.isEnabled && musicPlayer.isPlaying) {
+                musicPlayer.audio.play().catch(e => {
+                    console.log('播放失败');
+                });
+            }
+        }
+        
+        // 改变音量
+        function changeVolume(value) {
+            const volume = parseInt(value) / 100;
+            musicPlayer.volume = volume;
+            
+            if (musicPlayer.audio) {
+                musicPlayer.audio.volume = volume;
+            }
+            
+            document.getElementById('miniVolumeValue').textContent = value + '%';
+        }
+        
+        // 更新音乐显示
+        function updateMusicDisplay() {
+            // 更新当前音乐名称
+            if (musicPlayer.tracks.length > 0) {
+                const track = musicPlayer.tracks[musicPlayer.currentTrack];
+                document.getElementById('miniCurrentMusic').textContent = track.name;
+            }
+            
+            // 更新播放/暂停图标
+            const miniPlayPauseIcon = document.getElementById('miniPlayPauseIcon');
+            miniPlayPauseIcon.textContent = musicPlayer.isPlaying ? '⏸️' : '▶️';
+            
+            // 更新音乐开关图标
+            const miniMusicIcon = document.getElementById('miniMusicIcon');
+            miniMusicIcon.textContent = musicPlayer.isEnabled ? '🎵' : '🔇';
+            
+            // 更新音量显示
+            const volumeValue = Math.round(musicPlayer.volume * 100);
+            document.getElementById('miniVolumeSlider').value = volumeValue;
+            document.getElementById('miniVolumeValue').textContent = volumeValue + '%';
+        }
+        
+        // ============================================
+        // 显示拼音和汉字
+        function displayPinyinAndHanzi(question) {
+            const pinyinDisplay = document.getElementById('pinyinDisplay');
+            pinyinDisplay.innerHTML = '';
+            
+            const hanzi = question.hanzi;
+            const pinyin = question.pinyin;
+            
+            // 清理拼音字符串，移除拼音中的标点符号
+            const pinyinWords = cleanPinyinString(pinyin);
+            
+            let pinyinIndex = 0;
+            
+            for (let i = 0; i < hanzi.length; i++) {
+                const char = hanzi[i];
+                
+                // 判断字符是否为汉字（排除标点符号和空格）
+                const isChineseChar = /[\u4e00-\u9fff]/.test(char);
+                const isPunctuation = /[，。！？；："'、…《》（）【】［］｛｝「」『』<>〔〕〖〗·．·•～—]/.test(char);
+                const isSpace = /\s/.test(char);
+                
+                const wordElement = document.createElement('div');
+                wordElement.className = 'pinyin-word';
+                
+                // 如果是汉字且开启了提示，显示拼音
+                if (isChineseChar && appState.showHint && pinyinWords[pinyinIndex]) {
+                    const pinyinElement = document.createElement('div');
+                    pinyinElement.className = 'pinyin-text';
+                    pinyinElement.textContent = pinyinWords[pinyinIndex];
+                    wordElement.appendChild(pinyinElement);
+                    pinyinIndex++;
+                }
+                
+                const hanziElement = document.createElement('div');
+                hanziElement.className = 'hanzi-text';
+                hanziElement.textContent = char;
+                
+                // 如果是标点符号，应用不同的样式
+                if (isPunctuation) {
+                    hanziElement.style.fontSize = '1.5em';
+                    hanziElement.style.margin = '0 5px';
+                    hanziElement.style.opacity = '0.7';
+                    hanziElement.style.fontWeight = 'normal';
+                    // 对于某些标点符号，调整垂直位置
+                    if (/[，。、]/.test(char)) {
+                        hanziElement.style.marginTop = '20px';
+                    }
+                }
+                
+                wordElement.appendChild(hanziElement);
+                pinyinDisplay.appendChild(wordElement);
+            }
+        }
+
+        // 更新统计信息显示
+        function updateStatsDisplay() {
+            document.getElementById('currentScore').textContent = appState.score;
+            document.getElementById('accuracyRate').textContent = appState.totalQuestions > 0 ? 
+                Math.round((appState.correctAnswers / appState.totalQuestions) * 100) + '%' : '0%';
+            document.getElementById('currentQuestion').textContent = 
+                `${appState.currentIndex + 1} / ${appState.totalQuestions}`;
+            document.getElementById('elapsedTime').textContent = Math.floor(appState.elapsedTime) + 's';
+            
+            // 更新进度条
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progress = (appState.currentIndex / appState.totalQuestions) * 100;
+            
+            progressFill.style.width = progress + '%';
+            progressText.textContent = `${appState.currentIndex + 1} / ${appState.totalQuestions}`;
+            
+            // 更新题目编号
+            document.getElementById('questionNumber').textContent = `第 ${appState.currentIndex + 1} 题`;
+        }
+
+        // 显示反馈消息
+        function showFeedback(message, type) {
+            const feedbackElement = document.getElementById('feedbackMessage');
+            feedbackElement.textContent = message;
+            feedbackElement.className = `feedback-message ${type}`;
+            feedbackElement.classList.remove('hidden');
+            
+            // 添加更明显的动画效果
+            feedbackElement.style.animation = 'none';
+            setTimeout(() => {
+                feedbackElement.style.animation = 'fadeIn 0.5s ease, pulse 1s infinite';
+            }, 10);
+            
+            setTimeout(() => {
+                feedbackElement.classList.add('hidden');
+            }, type === 'complete' ? 5000 : 3000); // 增加正确和错误反馈的显示时间
+        }
+
+        // 开始计时器
+        function startTimer() {
+            appState.startTime = Date.now();
+            appState.timerInterval = setInterval(() => {
+                appState.elapsedTime = (Date.now() - appState.startTime) / 1000;
+                updateStatsDisplay();
+            }, 1000);
+        }
+
+        // 停止计时器
+        function stopTimer() {
+            if (appState.timerInterval) {
+                clearInterval(appState.timerInterval);
+                appState.timerInterval = null;
+            }
+        }
+
+        // 重置应用程序状态
+        function resetAppState() {
+            appState.currentQuestions = [];
+            appState.currentIndex = 0;
+            appState.score = 0;
+            appState.correctAnswers = 0;
+            // totalQuestions 将在 generateNewQuestions 中动态设置
+            appState.totalQuestions = 0;
+            appState.startTime = null;
+            appState.elapsedTime = 0;
+            appState.errorList = [];
+            stopTimer();
+        }
+
+        // ============================================
+        // 核心业务逻辑
+        // ============================================
+
+        // 更新所有选项卡的数量显示
+        function updateAllTabCounts() {
+            const modes = ['single', 'triple', 'sentence', 'idiom'];
+            
+            modes.forEach(mode => {
+                const libraryInfo = getLibraryInfo(mode);
+                const tab = document.querySelector(`[data-mode="${mode}"]`);
+                if (tab) {
+                    const smallElement = tab.querySelector('small');
+                    if (smallElement) {
+                        smallElement.textContent = libraryInfo.count;
+                    }
+                }
+            });
+        }
+
+        // 切换练习模式
+        function switchMode(mode) {
+            // 更新UI激活状态
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            
+            // 更新应用程序状态
+            appState.currentMode = mode;
+            resetAppState();
+            
+            // 更新题库信息显示
+            const libraryInfo = getLibraryInfo(mode);
+            document.getElementById('libraryTitle').textContent = libraryInfo.title;
+            document.getElementById('libraryCount').textContent = libraryInfo.count;
+            document.getElementById('libraryDesc').textContent = libraryInfo.desc;
+            
+            // 生成新题目
+            generateNewQuestions();
+            
+            // 重置输入框
+            const inputField = document.getElementById('userInput');
+            inputField.value = '';
+            inputField.className = 'input-field';
+            inputField.focus();
+            
+            // 显示第一个题目
+            displayCurrentQuestion();
+            startTimer();
+            
+            // 为question-card添加/移除模式类
+            const questionCard = document.getElementById('questionCard');
+            questionCard.classList.remove('sentence-mode', 'single-mode', 'triple-mode', 'idiom-mode');
+            questionCard.classList.add(`${mode}-mode`);
+        }
+
+        // 生成新的题目集合
+        function generateNewQuestions() {
+            const allQuestions = getAllQuestions(appState.currentMode);
+            const shuffledQuestions = shuffleArray(allQuestions);
+            
+            // 动态设置每轮题目数量为题库的实际长度
+            appState.questionsPerRound = allQuestions.length;
+            
+            appState.currentQuestions = shuffledQuestions.slice(0, appState.questionsPerRound);
+            appState.currentIndex = 0;
+            appState.totalQuestions = appState.currentQuestions.length;
+            
+            // 更新统计显示
+            updateStatsDisplay();
+        }
+
+        // 显示当前题目
+        function displayCurrentQuestion() {
+            if (appState.currentIndex < appState.currentQuestions.length) {
+                const question = appState.currentQuestions[appState.currentIndex];
+                displayPinyinAndHanzi(question);
+            } else {
+                // 所有题目完成
+                completePractice();
+            }
+        }
+
+        // 处理答案提交
+        function submitAnswer() {
+            const inputField = document.getElementById('userInput');
+            const userAnswer = inputField.value.trim();
+            
+            if (!userAnswer) {
+                showFeedback('请输入答案后再提交！', 'error');
+                return;
+            }
+            
+            const currentQuestion = appState.currentQuestions[appState.currentIndex];
+            const correctAnswer = currentQuestion.hanzi;
+            
+            // 判断答案是否正确
+            const isCorrect = userAnswer === correctAnswer;
+            
+            if (isCorrect) {
+                // 正确回答
+                inputField.className = 'input-field correct';
+                appState.score += 10;
+                appState.correctAnswers++;
+                
+                showFeedback('✅ 回答正确！+10分', 'correct');
+                
+                // 延迟后进入下一题
+                setTimeout(() => {
+                    appState.currentIndex++;
+                    inputField.value = '';
+                    inputField.className = 'input-field';
+                    
+                    if (appState.currentIndex < appState.currentQuestions.length) {
+                        displayCurrentQuestion();
+                        inputField.focus();
+                    } else {
+                        completePractice();
+                    }
+                    
+                    updateStatsDisplay();
+                }, 1000);
+            } else {
+                // 错误回答
+                inputField.className = 'input-field error';
+                
+                // 记录错题
+                appState.errorList.push({
+                    question: currentQuestion,
+                    userAnswer: userAnswer,
+                    timestamp: Date.now()
+                });
+                
+                showFeedback(`❌ 回答错误！正确答案：${correctAnswer}`, 'error');
+                
+                // 不清空输入框，让用户修改
+                setTimeout(() => {
+                    inputField.className = 'input-field';
+                }, 500);
+            }
+        }
+
+        // 完成所有练习
+        function completePractice() {
+            stopTimer();
+            
+            const accuracy = appState.totalQuestions > 0 ? 
+                Math.round((appState.correctAnswers / appState.totalQuestions) * 100) : 0;
+            
+            showFeedback(
+                `🎉 通关成功！总分：${appState.score}，正确率：${accuracy}%`,
+                'complete'
+            );
+            
+            // 更新最高分记录
+            if (appState.score > appState.stats.bestScore) {
+                appState.stats.bestScore = appState.score;
+            }
+            
+            // 更新统计数据
+            appState.stats.totalPractice++;
+            appState.stats.totalCorrect += appState.correctAnswers;
+            appState.stats.totalErrors += appState.errorList.length;
+            appState.stats.averageAccuracy = 
+                Math.round(appState.stats.totalCorrect / (appState.stats.totalPractice * appState.questionsPerRound) * 100);
+            
+            // 清空题目显示区域
+            const pinyinDisplay = document.getElementById('pinyinDisplay');
+            pinyinDisplay.innerHTML = '<div class="pinyin-word"><div class="hanzi-text">🎉</div></div><div class="pinyin-word"><div class="hanzi-text">完</div></div><div class="pinyin-word"><div class="hanzi-text">成</div></div>';
+        }
+
+        // ============================================
+        // UI交互处理函数
+        // ============================================
+
+        // 换一批题目
+        function shuffleQuestions() {
+            generateNewQuestions();
+            displayCurrentQuestion();
+            
+            const inputField = document.getElementById('userInput');
+            inputField.value = '';
+            inputField.className = 'input-field';
+            inputField.focus();
+        }
+
+        // 重置进度
+        function resetProgress() {
+            console.log('resetProgress函数被调用 - 开始重置');
+            // 直接重置，无需确认弹窗
+            resetAppState();
+            generateNewQuestions();
+            displayCurrentQuestion();
+            
+            const inputField = document.getElementById('userInput');
+            inputField.value = '';
+            inputField.className = 'input-field';
+            inputField.focus();
+            
+            updateStatsDisplay();
+            // 移除反馈消息显示
+            console.log('resetProgress函数执行完成 - 重置成功');
+        }
+
+        // 处理键盘按键
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitAnswer();
+            }
+        }
+
+
+
+        // 显示错题本
+        function showErrorList() {
+            if (appState.errorList.length === 0) {
+                showFeedback('📝 目前还没有错题记录', 'correct');
+                return;
+            }
+            
+            let errorMessage = '📝 错题本：\n\n';
+            appState.errorList.forEach((error, index) => {
+                errorMessage += `${index + 1}. 题目：${error.question.hanzi}\n`;
+                errorMessage += `   你的答案：${error.userAnswer}\n`;
+                errorMessage += `   正确答案：${error.question.hanzi}\n\n`;
+            });
+            
+            alert(errorMessage);
+        }
+
+        // 切换难度
+        function toggleDifficulty() {
+            appState.difficulty = appState.difficulty === 'easy' ? 'hard' : 'easy';
+            appState.showHint = appState.difficulty === 'easy';
+            
+            displayCurrentQuestion();
+            showFeedback(
+                appState.difficulty === 'easy' ? '⚙️ 已切换到简单模式' : '⚙️ 已切换到困难模式',
+                'correct'
+            );
+        }
+
+        // 显示统计信息
+        function showStats() {
+            const statsMessage = `
+📊 练习统计数据：
+
+总练习次数：${appState.stats.totalPractice} 次
+历史最高分：${appState.stats.bestScore} 分
+累计正确：${appState.stats.totalCorrect} 题
+累计错误：${appState.stats.totalErrors} 题
+平均正确率：${appState.stats.averageAccuracy}%
+
+当前练习：
+得分：${appState.score} 分
+正确率：${Math.round((appState.correctAnswers / appState.totalQuestions) * 100)}%
+用时：${Math.floor(appState.elapsedTime)} 秒
+错题数：${appState.errorList.length} 题
+            `.trim();
+            
+            alert(statsMessage);
+        }
+
+        // ============================================
+        // 初始化应用程序
+        // ============================================
+
+        // 页面加载完成后初始化
+        function initializeApp() {
+            // 首先更新所有选项卡的数量显示
+            updateAllTabCounts();
+            
+            // 初始化音乐播放器
+            initMusicPlayer();
+            
+            // 设置初始模式
+            switchMode('single');
+            
+            // 加载统计信息（如果有本地存储）
+            try {
+                const savedStats = localStorage.getItem('pinyinTypingStats');
+                if (savedStats) {
+                    appState.stats = JSON.parse(savedStats);
+                }
+            } catch (e) {
+                console.log('无法加载统计信息');
+            }
+            
+            // 输入框自动聚焦
+            const inputField = document.getElementById('userInput');
+            inputField.focus();
+            
+            // 添加输入框触摸优化
+            inputField.addEventListener('touchstart', function() {
+                this.focus();
+            });
+            
+            // 添加阻止双击缩放
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        }
+
+        // 页面关闭时保存统计信息
+        window.addEventListener('beforeunload', function() {
+            try {
+                localStorage.setItem('pinyinTypingStats', JSON.stringify(appState.stats));
+            } catch (e) {
+                console.log('无法保存统计信息');
+            }
+        });
+
+        // 页面加载完成后执行初始化
+        window.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
 </html>
