@@ -1,0 +1,28 @@
+{
+  "name": "拼音打字练习",
+  "version": "1.0.0",
+  "description": "小橘美美拼音打字练习器",
+  "entry": "index.html",
+  "window": {
+    "width": 375,
+    "height": 667,
+    "resizable": true,
+    "fullscreenable": true,
+    "title": "拼音打字练习",
+    "icon": "icon.png"
+  },
+  "platform": ["windows", "macos", "linux"],
+  "permissions": {
+    "fullscreen": true,
+    "clipboard": false,
+    "notification": false
+  },
+  "build": {
+    "asar": false,
+    "output": "拼音打字练习APP"
+  },
+  "features": {
+    "offline": true,
+    "noNetworkRequired": true
+  }
+}
