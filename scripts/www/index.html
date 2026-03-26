@@ -1,11 +1,1155 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>讯飞输入法按键编辑器</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #f8f9fa;
+            --accent-color: #fd79a8;
+            --border-radius: 16px;
+            --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2d3436;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            font-size: 15px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 18px 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #8e44ad 100%);
+            color: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 0px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .preview-section {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 0px;
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            position: sticky;
+            top: 15px;
+            z-index: 900;
+        }
+        
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0px 0;
+            min-height: 160px;
+            position: relative;
+        }
+        
+        #previewCanvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .control-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .collapse-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3436;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #e0e0e0;
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        input[type="color"] {
+            width: 100%;
+            height: 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 2px;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        .range-value {
+            display: inline-block;
+            width: 45px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .flex-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .flex-group > div {
+            flex: 1;
+        }
+        
+        .toggle-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: 600;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #8e44ad 100%);
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+            margin: 6px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+        }
+        
+        .templates-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .template-item {
+            height: 55px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .template-item:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-color);
+        }
+        
+        .shadow-controls, .gradient-controls {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .color-with-opacity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .color-with-opacity input[type="color"] {
+            flex: 2;
+        }
+        
+        .color-with-opacity input[type="range"] {
+            flex: 3;
+        }
+        
+        .corner-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        @media (max-width: 480px) {
+            .templates-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .flex-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .flex-group > div {
+                width: 100%;
+            }
+            
+            .corner-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .footer-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px 15px;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+        }
+        
+        .footer-buttons .btn {
+            margin: 0;
+        }
+        
+        .template-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 9px;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .expandable {
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>🎨 讯飞输入法按键编辑器</h2>
+    </header>
+    
+    <div class="container">
+        <section class="preview-section">
+            <div class="preview-container">
+                <canvas id="previewCanvas" width="200" height="200"></canvas>
+            </div>
+        </section>
+        
+        <section class="templates-section">
+            <h2 class="section-title">
+                🎭 预设模板
+                <button class="collapse-btn">+</button>
+            </h2>
+            <div class="expandable collapsed">
+                <p>点击下方模板可快速应用样式</p>
+                
+                <div class="templates-grid" id="templatesGrid">
+                    <!-- 模板将通过JS动态生成 -->
+                </div>
+            </div>
+        </section>
+        
+        <section class="control-section">
+            <h2 class="section-title">
+                ⚙️ 基本设置
+                <button class="collapse-btn">−</button>
+            </h2>
+            <div class="expandable">
+                <div class="form-group">
+                    <label for="size">图片尺寸: <span id="sizeValue" class="range-value">100</span> x <span id="sizeValue2" class="range-value">100</span> px</label>
+                    <input type="range" id="size" min="50" max="300" value="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="borderRadius">圆角半径: <span id="borderRadiusValue" class="range-value">10</span> px
+                        <a href="#" class="toggle-link" id="linkCorners">单独设置</a>
+                    </label>
+                    <input type="range" id="borderRadius" min="0" max="50" value="10">
+                </div>
+                
+                <div id="cornerControls" class="hidden">
+                    <div class="corner-controls">
+                        <div class="form-group">
+                            <label for="borderRadiusTL">左上角: <span id="borderRadiusTLValue" class="range-value">10</span> px</label>
+                            <input type="range" id="borderRadiusTL" min="0" max="50" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="borderRadiusTR">右上角: <span id="borderRadiusTRValue" class="range-value">10</span> px</label>
+                            <input type="range" id="borderRadiusTR" min="0" max="50" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="borderRadiusBL">左下角: <span id="borderRadiusBLValue" class="range-value">10</span> px</label>
+                            <input type="range" id="borderRadiusBL" min="0" max="50" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="borderRadiusBR">右下角: <span id="borderRadiusBRValue" class="range-value">10</span> px</label>
+                            <input type="range" id="borderRadiusBR" min="0" max="50" value="10">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="padding">边缘留白: <span id="paddingValue" class="range-value">0</span> px</label>
+                    <input type="range" id="padding" min="0" max="30" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="opacity">整体透明度: <span id="opacityValue" class="range-value">100</span>%</label>
+                    <input type="range" id="opacity" min="0" max="100" value="100">
+                </div>
+            </div>
+        </section>
+        
+        <section class="control-section">
+            <h2 class="section-title">
+                🎨 填充颜色
+                <button class="collapse-btn">−</button>
+            </h2>
+            <div class="expandable">
+                <div class="tab-buttons">
+                    <button class="tab-btn" data-tab="solid">纯色填充</button>
+                    <button class="tab-btn active" data-tab="gradient">渐变填充</button>
+                </div>
+                
+                <div id="solid-tab" style="display: none;">
+                    <div class="form-group">
+                        <label for="fillColor">填充颜色</label>
+                        <div class="color-with-opacity">
+                            <input type="color" id="fillColor" value="#ffffff">
+                            <input type="range" id="fillColorOpacity" min="0" max="100" value="100">
+                        </div>
+                        <div style="text-align: center;">
+                            <span id="fillColorOpacityValue" class="range-value">100%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="gradient-tab" class="gradient-controls">
+                    <div class="form-group">
+                        <label for="gradientType">渐变类型</label>
+                        <select id="gradientType">
+                            <option value="linear">线性渐变</option>
+                            <option value="radial">径向渐变</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gradientAngle">渐变角度: <span id="gradientAngleValue" class="range-value">0</span>°</label>
+                        <input type="range" id="gradientAngle" min="0" max="360" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gradientColor1">起始颜色</label>
+                        <div class="color-with-opacity">
+                            <input type="color" id="gradientColor1" value="#ffffff">
+                            <input type="range" id="gradientColor1Opacity" min="0" max="100" value="100">
+                        </div>
+                        <div style="text-align: center;">
+                            <span id="gradientColor1OpacityValue" class="range-value">100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gradientColor2">结束颜色</label>
+                        <div class="color-with-opacity">
+                            <input type="color" id="gradientColor2" value="#6c5ce7">
+                            <input type="range" id="gradientColor2Opacity" min="0" max="100" value="100">
+                        </div>
+                        <div style="text-align: center;">
+                            <span id="gradientColor2OpacityValue" class="range-value">100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="control-section">
+            <h2 class="section-title">
+                ✏️ 描边设置
+                <button class="collapse-btn">−</button>
+            </h2>
+            <div class="expandable">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableStroke" checked>
+                    <label for="enableStroke">启用描边</label>
+                </div>
+                
+                <div id="strokeControls">
+                    <div class="form-group">
+                        <label for="strokeWidth">描边宽度: <span id="strokeWidthValue" class="range-value">2</span> px</label>
+                        <input type="range" id="strokeWidth" min="0" max="10" value="2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="strokeColor">描边颜色</label>
+                        <div class="color-with-opacity">
+                            <input type="color" id="strokeColor" value="#000000">
+                            <input type="range" id="strokeColorOpacity" min="0" max="100" value="100">
+                        </div>
+                        <div style="text-align: center;">
+                            <span id="strokeColorOpacityValue" class="range-value">100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="strokeType">描边类型</label>
+                        <select id="strokeType">
+                            <option value="outside">外描边</option>
+                            <option value="inside">内描边</option>
+                            <option value="center">居中描边</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="control-section">
+            <h2 class="section-title">
+                🌓 阴影设置
+                <button class="collapse-btn">−</button>
+            </h2>
+            <div class="expandable">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableShadow" checked>
+                    <label for="enableShadow">启用阴影</label>
+                </div>
+                
+                <div id="shadowControls">
+                    <div class="form-group">
+                        <label for="shadowBlur">阴影模糊: <span id="shadowBlurValue" class="range-value">5</span> px</label>
+                        <input type="range" id="shadowBlur" min="0" max="20" value="5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shadowOffsetX">水平偏移: <span id="shadowOffsetXValue" class="range-value">0</span> px</label>
+                        <input type="range" id="shadowOffsetX" min="-20" max="20" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shadowOffsetY">垂直偏移: <span id="shadowOffsetYValue" class="range-value">5</span> px</label>
+                        <input type="range" id="shadowOffsetY" min="-20" max="20" value="5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shadowColor">阴影颜色</label>
+                        <div class="color-with-opacity">
+                            <input type="color" id="shadowColor" value="#000000">
+                            <input type="range" id="shadowColorOpacity" min="0" max="100" value="100">
+                        </div>
+                        <div style="text-align: center;">
+                            <span id="shadowColorOpacityValue" class="range-value">100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shadowType">阴影类型</label>
+                        <select id="shadowType">
+                            <option value="outer">外阴影</option>
+                            <option value="inner">内阴影</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+	</div>
+
+    <div class="footer-buttons">
+        <button id="resetBtn" class="btn btn-secondary">重置</button>
+        <button id="downloadBtn" class="btn">下载图片</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取Canvas和上下文
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 获取所有控制元素
+            const sizeSlider = document.getElementById('size');
+            const borderRadiusSlider = document.getElementById('borderRadius');
+            const paddingSlider = document.getElementById('padding');
+            const opacitySlider = document.getElementById('opacity');
+            const fillColorPicker = document.getElementById('fillColor');
+            const fillColorOpacitySlider = document.getElementById('fillColorOpacity');
+            const enableStrokeCheckbox = document.getElementById('enableStroke');
+            const strokeWidthSlider = document.getElementById('strokeWidth');
+            const strokeColorPicker = document.getElementById('strokeColor');
+            const strokeColorOpacitySlider = document.getElementById('strokeColorOpacity');
+            const strokeTypeSelect = document.getElementById('strokeType');
+            const enableShadowCheckbox = document.getElementById('enableShadow');
+            const shadowBlurSlider = document.getElementById('shadowBlur');
+            const shadowOffsetXSlider = document.getElementById('shadowOffsetX');
+            const shadowOffsetYSlider = document.getElementById('shadowOffsetY');
+            const shadowColorPicker = document.getElementById('shadowColor');
+            const shadowColorOpacitySlider = document.getElementById('shadowColorOpacity');
+            const shadowTypeSelect = document.getElementById('shadowType');
+            const gradientTypeSelect = document.getElementById('gradientType');
+            const gradientAngleSlider = document.getElementById('gradientAngle');
+            const gradientColor1Picker = document.getElementById('gradientColor1');
+            const gradientColor1OpacitySlider = document.getElementById('gradientColor1Opacity');
+            const gradientColor2Picker = document.getElementById('gradientColor2');
+            const gradientColor2OpacitySlider = document.getElementById('gradientColor2Opacity');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const linkCorners = document.getElementById('linkCorners');
+            const cornerControls = document.getElementById('cornerControls');
+            const borderRadiusTLSlider = document.getElementById('borderRadiusTL');
+            const borderRadiusTRSlider = document.getElementById('borderRadiusTR');
+            const borderRadiusBLSlider = document.getElementById('borderRadiusBL');
+            const borderRadiusBRSlider = document.getElementById('borderRadiusBR');
+            
+            // 标签切换
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tab = button.dataset.tab;
+                    
+                    // 移除所有active类
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    document.getElementById('gradient-tab').classList.add('hidden');
+                    document.getElementById('solid-tab').style.display = 'none';
+                    
+                    // 添加active类到当前标签
+                    button.classList.add('active');
+                    
+                    if (tab === 'gradient') {
+                        document.getElementById('gradient-tab').classList.remove('hidden');
+                    } else {
+                        document.getElementById('solid-tab').style.display = 'block';
+                    }
+                });
+            });
+            
+            // 圆角链接切换
+            let cornersLinked = true;
+            linkCorners.addEventListener('click', function(e) {
+                e.preventDefault();
+                cornersLinked = !cornersLinked;
+                linkCorners.textContent = cornersLinked ? "单独设置" : "链接设置";
+                cornerControls.classList.toggle('hidden', cornersLinked);
+            });
+            
+            // 初始化值显示
+            updateValueDisplays();
+            
+            // 初始化模板
+            initTemplates();
+            
+            // 添加事件监听器
+            const controls = [
+                sizeSlider, borderRadiusSlider, paddingSlider, opacitySlider,
+                fillColorPicker, fillColorOpacitySlider, enableStrokeCheckbox,
+                strokeWidthSlider, strokeColorPicker, strokeColorOpacitySlider, strokeTypeSelect,
+                enableShadowCheckbox, shadowBlurSlider, shadowOffsetXSlider,
+                shadowOffsetYSlider, shadowColorPicker, shadowColorOpacitySlider, shadowTypeSelect,
+                gradientTypeSelect, gradientAngleSlider, gradientColor1Picker, gradientColor1OpacitySlider,
+                gradientColor2Picker, gradientColor2OpacitySlider, borderRadiusTLSlider, borderRadiusTRSlider,
+                borderRadiusBLSlider, borderRadiusBRSlider
+            ];
+            
+            controls.forEach(control => {
+                control.addEventListener('input', function() {
+                    // 如果圆角是链接的，同步所有圆角值
+                    if (cornersLinked && this === borderRadiusSlider) {
+                        const value = this.value;
+                        borderRadiusTLSlider.value = value;
+                        borderRadiusTRSlider.value = value;
+                        borderRadiusBLSlider.value = value;
+                        borderRadiusBRSlider.value = value;
+                        updateValueDisplays();
+                    }
+                    updateCanvas();
+                });
+            });
+            
+            enableStrokeCheckbox.addEventListener('change', updateCanvas);
+            enableShadowCheckbox.addEventListener('change', updateCanvas);
+            
+            downloadBtn.addEventListener('click', downloadImage);
+            resetBtn.addEventListener('click', resetSettings);
+            
+            // 初始化Canvas
+            updateCanvas();
+            
+            // 更新值显示函数
+            function updateValueDisplays() {
+                document.getElementById('sizeValue').textContent = sizeSlider.value;
+                document.getElementById('sizeValue2').textContent = sizeSlider.value;
+                document.getElementById('borderRadiusValue').textContent = borderRadiusSlider.value;
+                document.getElementById('borderRadiusTLValue').textContent = borderRadiusTLSlider.value;
+                document.getElementById('borderRadiusTRValue').textContent = borderRadiusTRSlider.value;
+                document.getElementById('borderRadiusBLValue').textContent = borderRadiusBLSlider.value;
+                document.getElementById('borderRadiusBRValue').textContent = borderRadiusBRSlider.value;
+                document.getElementById('paddingValue').textContent = paddingSlider.value;
+                document.getElementById('opacityValue').textContent = opacitySlider.value;
+                document.getElementById('strokeWidthValue').textContent = strokeWidthSlider.value;
+                document.getElementById('shadowBlurValue').textContent = shadowBlurSlider.value;
+                document.getElementById('shadowOffsetXValue').textContent = shadowOffsetXSlider.value;
+                document.getElementById('shadowOffsetYValue').textContent = shadowOffsetYSlider.value;
+                document.getElementById('gradientAngleValue').textContent = gradientAngleSlider.value;
+                document.getElementById('fillColorOpacityValue').textContent = fillColorOpacitySlider.value + '%';
+                document.getElementById('strokeColorOpacityValue').textContent = strokeColorOpacitySlider.value + '%';
+                document.getElementById('shadowColorOpacityValue').textContent = shadowColorOpacitySlider.value + '%';
+                document.getElementById('gradientColor1OpacityValue').textContent = gradientColor1OpacitySlider.value + '%';
+                document.getElementById('gradientColor2OpacityValue').textContent = gradientColor2OpacitySlider.value + '%';
+            }
+            
+            // 更新Canvas函数
+            function updateCanvas() {
+                const size = parseInt(sizeSlider.value);
+                const borderRadius = parseInt(borderRadiusSlider.value);
+                const borderRadiusTL = parseInt(borderRadiusTLSlider.value);
+                const borderRadiusTR = parseInt(borderRadiusTRSlider.value);
+                const borderRadiusBL = parseInt(borderRadiusBLSlider.value);
+                const borderRadiusBR = parseInt(borderRadiusBRSlider.value);
+                const padding = parseInt(paddingSlider.value);
+                const opacity = parseInt(opacitySlider.value) / 100;
+                const enableStroke = enableStrokeCheckbox.checked;
+                const strokeWidth = enableStroke ? parseInt(strokeWidthSlider.value) : 0;
+                const strokeColor = hexToRgba(strokeColorPicker.value, parseInt(strokeColorOpacitySlider.value) / 100);
+                const strokeType = strokeTypeSelect.value;
+                const enableShadow = enableShadowCheckbox.checked;
+                const shadowBlur = parseInt(shadowBlurSlider.value);
+                const shadowOffsetX = parseInt(shadowOffsetXSlider.value);
+                const shadowOffsetY = parseInt(shadowOffsetYSlider.value);
+                const shadowColor = hexToRgba(shadowColorPicker.value, parseInt(shadowColorOpacitySlider.value) / 100);
+                const shadowType = shadowTypeSelect.value;
+                const gradientType = gradientTypeSelect.value;
+                const gradientAngle = parseInt(gradientAngleSlider.value);
+                const gradientColor1 = hexToRgba(gradientColor1Picker.value, parseInt(gradientColor1OpacitySlider.value) / 100);
+                const gradientColor2 = hexToRgba(gradientColor2Picker.value, parseInt(gradientColor2OpacitySlider.value) / 100);
+                const fillColor = hexToRgba(fillColorPicker.value, parseInt(fillColorOpacitySlider.value) / 100);
+                const isGradient = document.querySelector('[data-tab="gradient"]').classList.contains('active');
+                
+                // 更新显示的值
+                updateValueDisplays();
+                
+                // 计算需要的额外空间（阴影和描边）
+                const shadowExtra = enableShadow ? Math.max(
+                    Math.abs(shadowOffsetX) + shadowBlur,
+                    Math.abs(shadowOffsetY) + shadowBlur
+                ) : 0;
+                
+                const strokeExtra = enableStroke ? 
+                    (strokeType === 'outside' ? strokeWidth : (strokeType === 'center' ? strokeWidth / 2 : 0)) 
+                    : 0;
+                
+                const extraSpace = Math.max(shadowExtra, strokeExtra);
+                
+                // 计算Canvas尺寸（包括留白和额外空间）
+                const canvasSize = size + padding * 2 + extraSpace * 2;
+                
+                // 设置Canvas尺寸
+                canvas.width = canvasSize;
+                canvas.height = canvasSize;
+                
+                // 清除Canvas
+                ctx.clearRect(0, 0, canvasSize, canvasSize);
+                
+                // 设置全局透明度
+                ctx.globalAlpha = opacity;
+                
+                // 计算矩形的位置和尺寸（考虑描边类型和额外空间）
+                let rectX = padding + extraSpace;
+                let rectY = padding + extraSpace;
+                let rectWidth = size;
+                let rectHeight = size;
+                
+                if (enableStroke && strokeType === 'inside') {
+                    rectX += strokeWidth / 2;
+                    rectY += strokeWidth / 2;
+                    rectWidth -= strokeWidth;
+                    rectHeight -= strokeWidth;
+                } else if (enableStroke && strokeType === 'outside') {
+                    rectX -= strokeWidth / 2;
+                    rectY -= strokeWidth / 2;
+                    rectWidth += strokeWidth;
+                    rectHeight += strokeWidth;
+                }
+                
+                // 创建路径
+                createRoundedRectPath(ctx, rectX, rectY, rectWidth, rectHeight, borderRadiusTL, borderRadiusTR, borderRadiusBL, borderRadiusBR);
+                
+                // 绘制外阴影
+                if (enableShadow && shadowType === 'outer') {
+                    ctx.shadowColor = shadowColor;
+                    ctx.shadowBlur = shadowBlur;
+                    ctx.shadowOffsetX = shadowOffsetX;
+                    ctx.shadowOffsetY = shadowOffsetY;
+                } else {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0)';
+                    ctx.shadowBlur = 0;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                }
+                
+                // 设置填充
+                if (isGradient) {
+                    let gradient;
+                    
+                    if (gradientType === 'linear') {
+                        const angleRad = (gradientAngle - 90) * Math.PI / 180;
+                        const x1 = rectX + Math.cos(angleRad) * rectWidth / 2;
+                        const y1 = rectY + Math.sin(angleRad) * rectHeight / 2;
+                        const x2 = rectX + Math.cos(angleRad + Math.PI) * rectWidth / 2;
+                        const y2 = rectY + Math.sin(angleRad + Math.PI) * rectHeight / 2;
+                        
+                        gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+                    } else {
+                        gradient = ctx.createRadialGradient(
+                            rectX + rectWidth / 2, rectY + rectHeight / 2, 0,
+                            rectX + rectWidth / 2, rectY + rectHeight / 2, Math.max(rectWidth, rectHeight) / 2
+                        );
+                    }
+                    
+                    gradient.addColorStop(0, gradientColor1);
+                    gradient.addColorStop(1, gradientColor2);
+                    
+                    ctx.fillStyle = gradient;
+                } else {
+                    ctx.fillStyle = fillColor;
+                }
+                
+                // 绘制填充
+                ctx.fill();
+                
+                // 绘制描边
+                if (enableStroke && strokeWidth > 0) {
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = strokeWidth;
+                    ctx.stroke();
+                }
+                
+                // 绘制内阴影
+                if (enableShadow && shadowType === 'inner') {
+                    ctx.save();
+                    // 创建剪辑路径
+                    createRoundedRectPath(ctx, rectX, rectY, rectWidth, rectHeight, borderRadiusTL, borderRadiusTR, borderRadiusBL, borderRadiusBR);
+                    ctx.clip();
+                    
+                    // 设置阴影
+                    ctx.shadowColor = shadowColor;
+                    ctx.shadowBlur = shadowBlur;
+                    ctx.shadowOffsetX = shadowOffsetX;
+                    ctx.shadowOffsetY = shadowOffsetY;
+                    
+                    // 绘制一个更大的形状来产生内阴影效果
+                    ctx.beginPath();
+                    ctx.rect(rectX - 50, rectY - 50, rectWidth + 100, rectHeight + 100);
+                    ctx.fillStyle = 'rgba(0,0,0,0.01)'; // 几乎透明的填充
+                    ctx.fill();
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // 创建圆角矩形路径
+            function createRoundedRectPath(ctx, x, y, width, height, radiusTL, radiusTR, radiusBL, radiusBR) {
+                ctx.beginPath();
+                ctx.moveTo(x + radiusTL, y);
+                ctx.lineTo(x + width - radiusTR, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radiusTR);
+                ctx.lineTo(x + width, y + height - radiusBR);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radiusBR, y + height);
+                ctx.lineTo(x + radiusBL, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radiusBL);
+                ctx.lineTo(x, y + radiusTL);
+                ctx.quadraticCurveTo(x, y, x + radiusTL, y);
+                ctx.closePath();
+            }
+            
+            // 十六进制颜色转RGBA
+            function hexToRgba(hex, opacity) {
+                hex = hex.replace('#', '');
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                
+                return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            }
+            
+            // 下载图片
+            function downloadImage() {
+                const timestamp = Date.now();
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `xunfei_btn_${timestamp}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            }
+            
+            // 重置设置
+            function resetSettings() {
+                sizeSlider.value = 100;
+                borderRadiusSlider.value = 10;
+                borderRadiusTLSlider.value = 10;
+                borderRadiusTRSlider.value = 10;
+                borderRadiusBLSlider.value = 10;
+                borderRadiusBRSlider.value = 10;
+                paddingSlider.value = 0;
+                opacitySlider.value = 100;
+                fillColorPicker.value = '#ffffff';
+                fillColorOpacitySlider.value = 100;
+                enableStrokeCheckbox.checked = true;
+                strokeWidthSlider.value = 2;
+                strokeColorPicker.value = '#000000';
+                strokeColorOpacitySlider.value = 100;
+                strokeTypeSelect.value = 'outside';
+                enableShadowCheckbox.checked = true;
+                shadowBlurSlider.value = 5;
+                shadowOffsetXSlider.value = 0;
+                shadowOffsetYSlider.value = 5;
+                shadowColorPicker.value = '#000000';
+                shadowColorOpacitySlider.value = 100;
+                shadowTypeSelect.value = 'outer';
+                gradientTypeSelect.value = 'linear';
+                gradientAngleSlider.value = 0;
+                gradientColor1Picker.value = '#ffffff';
+                gradientColor1OpacitySlider.value = 100;
+                gradientColor2Picker.value = '#6c5ce7';
+                gradientColor2OpacitySlider.value = 100;
+                
+                document.querySelector('[data-tab="gradient"]').click();
+                updateValueDisplays();
+                updateCanvas();
+            }
+            
+            // 初始化模板
+            function initTemplates() {
+                const templatesGrid = document.getElementById('templatesGrid');
+                const templates = [
+                    { name: '霓虹紫', gradient: ['#a363f5', '#6c5ce7'], stroke: 'transparent', strokeWidth: 0, radius: 20, shadow: true, shadowBlur: 15, shadowOffset: 0, shadowColor: '#6c5ce7' },
+                    { name: '珊瑚橙', gradient: ['#ff9a9e', '#fad0c4'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true },
+                    { name: '薄荷绿', gradient: ['#43e97b', '#38f9d7'], stroke: 'transparent', strokeWidth: 0, radius: 16, shadow: true },
+                    { name: '深海蓝', gradient: ['#4facfe', '#00f2fe'], stroke: 'transparent', strokeWidth: 0, radius: 22, shadow: true },
+                    { name: '玫瑰金', gradient: ['#ffecd2', '#fcb69f'], stroke: 'transparent', strokeWidth: 0, radius: 20, shadow: true },
+                    { name: '暗黑模式', fill: '#2d3436', stroke: '#636e72', strokeWidth: 2, radius: 12, shadow: true },
+                    { name: '玻璃效果', fill: 'rgba(255, 255, 255, 0.25)', stroke: 'rgba(255, 255, 255, 0.3)', strokeWidth: 1, radius: 20, shadow: true, shadowBlur: 15 },
+                    { name: '金属质感', gradient: ['#e0e0e0', '#c0c0c0'], stroke: '#a0a0a0', strokeWidth: 1, radius: 14, shadow: true },
+                    { name: '简约白', fill: '#ffffff', stroke: '#e0e0e0', strokeWidth: 2, radius: 10, shadow: true },
+                    { name: '活力黄', gradient: ['#f6d365', '#fda085'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true },
+                    { name: '优雅粉', gradient: ['#ff9a9e', '#fecfef'], stroke: 'transparent', strokeWidth: 0, radius: 20, shadow: true },
+                    { name: '自然绿', gradient: ['#d4fc79', '#96e6a1'], stroke: 'transparent', strokeWidth: 0, radius: 16, shadow: true },
+                    { name: '科技蓝', gradient: ['#4facfe', '#00f2fe'], stroke: 'transparent', strokeWidth: 0, radius: 8, shadow: true },
+                    { name: '深紫渐变', gradient: ['#6a11cb', '#2575fc'], stroke: 'transparent', strokeWidth: 0, radius: 24, shadow: true },
+                    { name: '橙红渐变', gradient: ['#ff758c', '#ff7eb3'], stroke: 'transparent', strokeWidth: 0, radius: 20, shadow: true },
+                    { name: '青绿渐变', gradient: ['#0ba360', '#3cba92'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true },
+                    { name: '紫红渐变', gradient: ['#cd9cf2', '#f6f3ff'], stroke: 'transparent', strokeWidth: 0, radius: 22, shadow: true },
+                    { name: '内凹效果', fill: '#f0f0f0', stroke: '#d0d0d0', strokeWidth: 2, radius: 12, shadow: true, shadowType: 'inner' },
+                    { name: '凸起效果', fill: '#f0f0f0', stroke: '#ffffff', strokeWidth: 2, radius: 12, shadow: true, shadowOffset: -2 },
+                    { name: '无阴影简约', fill: '#ffffff', stroke: '#dddddd', strokeWidth: 2, radius: 10, shadow: false },
+                    // 新增20套模板
+                    { name: '宝石红', gradient: ['#ff6b6b', '#c0392b'], stroke: 'transparent', strokeWidth: 0, radius: 16, shadow: true },
+                    { name: '海洋蓝', gradient: ['#0984e3', '#74b9ff'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true },
+                    { name: '柠檬黄', gradient: ['#ffeaa7', '#fab1a0'], stroke: 'transparent', strokeWidth: 0, radius: 14, shadow: true },
+                    { name: '薰衣草', gradient: ['#a29bfe', '#dfe6e9'], stroke: 'transparent', strokeWidth: 0, radius: 20, shadow: true },
+                    { name: '日出橙', gradient: ['#fd79a8', '#fdcb6e'], stroke: 'transparent', strokeWidth: 0, radius: 22, shadow: true },
+                    { name: '森林绿', gradient: ['#00b894', '#00cec9'], stroke: 'transparent', strokeWidth: 0, radius: 16, shadow: true },
+                    { name: '黄昏紫', gradient: ['#6c5ce7', '#a29bfe'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true },
+                    { name: '石墨黑', fill: '#2d3436', stroke: '#636e72', strokeWidth: 1, radius: 10, shadow: true },
+                    { name: '珍珠白', fill: '#dfe6e9', stroke: '#b2bec3', strokeWidth: 2, radius: 14, shadow: true },
+                    { name: '玫瑰粉', gradient: ['#fd79a8', '#e84393'], stroke: 'transparent', strokeWidth: 0, radius: 20, shadow: true },
+                    { name: '天空蓝', gradient: ['#81ecec', '#74b9ff'], stroke: 'transparent', strokeWidth: 0, radius: 16, shadow: true },
+                    { name: '大地棕', gradient: ['#fdcb6e', '#e17055'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true },
+                    { name: '冰晶蓝', fill: 'rgba(173, 216, 230, 0.3)', stroke: 'rgba(173, 216, 230, 0.5)', strokeWidth: 1, radius: 22, shadow: true, shadowBlur: 10 },
+                    { name: '火焰红', gradient: ['#ff7675', '#e17055'], stroke: 'transparent', strokeWidth: 0, radius: 16, shadow: true },
+                    { name: '翡翠绿', gradient: ['#55efc4', '#00b894'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true },
+                    { name: '琥珀黄', gradient: ['#ffeaa7', '#fdcb6e'], stroke: 'transparent', strokeWidth: 0, radius: 14, shadow: true },
+                    { name: '紫水晶', gradient: ['#a29bfe', '#6c5ce7'], stroke: 'transparent', strokeWidth: 0, radius: 20, shadow: true },
+                    { name: '珍珠母', fill: 'rgba(255, 255, 255, 0.7)', stroke: 'rgba(255, 255, 255, 0.9)', strokeWidth: 1, radius: 16, shadow: true, shadowBlur: 8 },
+                    { name: '钢铁灰', fill: '#636e72', stroke: '#2d3436', strokeWidth: 2, radius: 12, shadow: true },
+                    { name: '樱花粉', gradient: ['#fd79a8', '#fab1a0'], stroke: 'transparent', strokeWidth: 0, radius: 18, shadow: true }
+                ];
+                
+                templates.forEach((template, index) => {
+                    const templateEl = document.createElement('div');
+                    templateEl.className = 'template-item';
+                    templateEl.title = template.name;
+                    
+                    // 使用CSS模拟模板效果
+                    if (template.gradient) {
+                        templateEl.style.background = `linear-gradient(135deg, ${template.gradient[0]}, ${template.gradient[1]})`;
+                    } else {
+                        templateEl.style.background = template.fill;
+                    }
+                    
+                    templateEl.style.border = `${template.strokeWidth}px solid ${template.stroke}`;
+                    templateEl.style.borderRadius = `${template.radius}px`;
+                    
+                    if (template.shadow) {
+                        const blur = template.shadowBlur || 5;
+                        const offset = template.shadowOffset !== undefined ? template.shadowOffset : 0;
+                        const color = template.shadowColor || 'rgba(0, 0, 0, 0.2)';
+                        templateEl.style.boxShadow = `0 ${offset}px ${blur}px ${color}`;
+                    }
+                    
+                    // 添加模板名称标签
+                    const badge = document.createElement('div');
+                    badge.className = 'template-badge';
+                    badge.textContent = template.name;
+                    templateEl.appendChild(badge);
+                    
+                    templateEl.addEventListener('click', () => {
+                        applyTemplate(template);
+                    });
+                    
+                    templatesGrid.appendChild(templateEl);
+                });
+            }
+            
+            // 应用模板
+            function applyTemplate(template) {
+                // 设置填充
+                if (template.gradient) {
+                    document.querySelector('[data-tab="gradient"]').click();
+                    gradientColor1Picker.value = rgbToHex(template.gradient[0]);
+                    gradientColor2Picker.value = rgbToHex(template.gradient[1]);
+                    gradientColor1OpacitySlider.value = 100;
+                    gradientColor2OpacitySlider.value = 100;
+                } else {
+                    document.querySelector('[data-tab="solid"]').click();
+                    const fillColor = rgbToHex(template.fill);
+                    fillColorPicker.value = fillColor;
+                    fillColorOpacitySlider.value = 100;
+                }
+                
+                // 设置描边
+                enableStrokeCheckbox.checked = template.strokeWidth > 0;
+                strokeWidthSlider.value = template.strokeWidth || 0;
+                strokeColorPicker.value = rgbToHex(template.stroke);
+                strokeColorOpacitySlider.value = 100;
+                
+                // 设置圆角
+                borderRadiusSlider.value = template.radius;
+                borderRadiusTLSlider.value = template.radius;
+                borderRadiusTRSlider.value = template.radius;
+                borderRadiusBLSlider.value = template.radius;
+                borderRadiusBRSlider.value = template.radius;
+                
+                // 设置阴影
+                enableShadowCheckbox.checked = template.shadow || false;
+                if (template.shadowBlur) shadowBlurSlider.value = template.shadowBlur;
+                if (template.shadowOffset !== undefined) {
+                    shadowOffsetXSlider.value = 0;
+                    shadowOffsetYSlider.value = template.shadowOffset;
+                }
+                if (template.shadowColor) shadowColorPicker.value = rgbToHex(template.shadowColor);
+                if (template.shadowType) shadowTypeSelect.value = template.shadowType;
+                
+                // 更新Canvas
+                updateCanvas();
+            }
+            
+            // RGB颜色转十六进制
+            function rgbToHex(rgb) {
+                if (rgb.startsWith('#')) return rgb;
+                
+                // 处理rgba颜色
+                if (rgb.startsWith('rgba')) {
+                    rgb = rgb.replace('rgba(', '').replace(')', '').split(',');
+                    return `#${parseInt(rgb[0]).toString(16).padStart(2, '0')}${parseInt(rgb[1]).toString(16).padStart(2, '0')}${parseInt(rgb[2]).toString(16).padStart(2, '0')}`;
+                }
+                
+                // 处理rgb颜色
+                if (rgb.startsWith('rgb')) {
+                    rgb = rgb.replace('rgb(', '').replace(')', '').split(',');
+                    return `#${parseInt(rgb[0]).toString(16).padStart(2, '0')}${parseInt(rgb[1]).toString(16).padStart(2, '0')}${parseInt(rgb[2]).toString(16).padStart(2, '0')}`;
+                }
+                
+                return '#000000';
+            }
+            
+            // 折叠/展开部分
+            const collapseButtons = document.querySelectorAll('.collapse-btn');
+            collapseButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const section = this.closest('.control-section, .templates-section');
+                    const content = section.querySelector('.expandable');
+                    
+                    content.classList.toggle('collapsed');
+                    
+                    if (content.classList.contains('collapsed')) {
+                        this.textContent = '+';
+                    } else {
+                        this.textContent = '−';
+                    }
+                });
+            });
+            
+            // 默认折叠模板部分
+            document.querySelector('.templates-section .expandable').classList.add('collapsed');
+            document.querySelector('.templates-section .collapse-btn').textContent = '+';
+        });
+    </script>
+
+</body>
 </html>
