@@ -1,11 +1,827 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>输入法按键编辑器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 380px 1fr 380px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .left-panel, .right-panel {
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .left-panel::-webkit-scrollbar,
+        .right-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .left-panel::-webkit-scrollbar-track,
+        .right-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb,
+        .right-panel::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 3px;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb:hover,
+        .right-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.7);
+        }
+
+        .center-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 16px;
+            color: #a8b2d1;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a8b2d1;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .range-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-wrapper input[type="range"] {
+            flex: 1;
+        }
+
+        .range-value {
+            min-width: 45px;
+            text-align: center;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 10px 8px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 100px, 0.05);
+            color: #a8b2d1;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .preset-btn.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            color: #fff;
+        }
+
+        .preview-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 600px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .key-preview {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: move;
+            transition: box-shadow 0.3s, background 0.3s, border 0.3s, transform 0.3s;
+            user-select: none;
+        }
+
+        .key-preview:hover {
+            transform: scale(1.02);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .section-disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .gradient-preview {
+            width: 100%;
+            height: 40px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #a8b2d1;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            color: #fff;
+        }
+
+        .info-text {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+        }
+
+        .subtitle-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .subtitle-item input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .subtitle-item button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .subtitle-item button:hover {
+            background: rgba(255, 100, 100, 0.4);
+        }
+
+        .draggable-text {
+            position: absolute;
+            transition: box-shadow 0.3s, background 0.3s, border 0.3s;
+        }
+
+        .draggable-text:hover {
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .draggable-text:active {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .draggable-text.resizing {
+            cursor: nwse-resize !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧面板：基本设置 -->
+        <div class="panel left-panel">
+            <h1>⌨️ 基本设置</h1>
+
+            <h2>🎨 预设模板</h2>
+            <div class="preset-grid">
+                <button class="preset-btn active" data-preset="default">默认</button>
+                <button class="preset-btn" data-preset="modern">现代</button>
+                <button class="preset-btn" data-preset="glass">玻璃</button>
+                <button class="preset-btn" data-preset="glass-thin">薄玻璃</button>
+                <button class="preset-btn" data-preset="glass-thick">厚玻璃</button>
+                <button class="preset-btn" data-preset="glass-frosted">磨砂</button>
+                <button class="preset-btn" data-preset="glass-matte">哑光</button>
+                <button class="preset-btn" data-preset="glass-prism">棱镜</button>
+                <button class="preset-btn" data-preset="frosted-heavy">重磨砂</button>
+                <button class="preset-btn" data-preset="frosted-light">轻磨砂</button>
+                <button class="preset-btn" data-preset="neon">霓虹</button>
+                <button class="preset-btn" data-preset="minimal">极简</button>
+                <button class="preset-btn" data-preset="vintage">复古</button>
+                <button class="preset-btn" data-preset="metallic">金属</button>
+                <button class="preset-btn" data-preset="wood">木质</button>
+                <button class="preset-btn" data-preset="leather">皮革</button>
+                <button class="preset-btn" data-preset="gradient-blue">蓝渐变</button>
+                <button class="preset-btn" data-preset="gradient-sunset">日落</button>
+                <button class="preset-btn" data-preset="tech">科技</button>
+                <button class="preset-btn" data-preset="cyber">赛博</button>
+                <button class="preset-btn" data-preset="ocean">海洋</button>
+                <button class="preset-btn" data-preset="forest">森林</button>
+                <button class="preset-btn" data-preset="sunset-glow">夕阳</button>
+                <button class="preset-btn" data-preset="aurora">极光</button>
+                <button class="preset-btn" data-preset="ruby">红宝石</button>
+                <button class="preset-btn" data-preset="emerald">翡翠</button>
+                <button class="preset-btn" data-preset="gold">金色</button>
+                <button class="preset-btn" data-preset="silver">银色</button>
+                <button class="preset-btn" data-preset="rose">玫瑰</button>
+                <button class="preset-btn" data-preset="lavender">薰衣草</button>
+                <button class="preset-btn" data-preset="mint">薄荷</button>
+                <button class="preset-btn" data-preset="peach">蜜桃</button>
+                <button class="preset-btn" data-preset="berry">浆果</button>
+                <button class="preset-btn" data-preset="chocolate">巧克力</button>
+                <button class="preset-btn" data-preset="coffee">咖啡</button>
+                <button class="preset-btn" data-preset="stone">石材</button>
+                <button class="preset-btn" data-preset="crystal">水晶</button>
+                <button class="preset-btn" data-preset="bubble">气泡</button>
+                <button class="preset-btn" data-preset="cloud">云朵</button>
+                <button class="preset-btn" data-preset="star">星空</button>
+                <button class="preset-btn" data-preset="galaxy">星系</button>
+                <button class="preset-btn" data-preset="fire">火焰</button>
+                <button class="preset-btn" data-preset="ice">冰霜</button>
+                <button class="preset-btn" data-preset="thunder">雷电</button>
+                <button class="preset-btn" data-preset="rain">雨滴</button>
+                <button class="preset-btn" data-preset="snow">雪花</button>
+                <button class="preset-btn" data-preset="cherry">樱花</button>
+                <button class="preset-btn" data-preset="autumn">秋叶</button>
+                <button class="preset-btn" data-preset="bamboo">竹韵</button>
+                <button class="preset-btn" data-preset="jade">玉质</button>
+            </div>
+
+            <h2>📐 基本参数</h2>
+            <div class="form-group">
+                <label>尺寸模板</label>
+                <select id="sizeTemplate">
+                    <option value="preset">预设尺寸</option>
+                    <option value="custom-input" selected>自定义输入</option>
+                    <option value="100x100">100 × 100</option>
+                    <option value="108x108">108 × 108</option>
+                    <option value="120x120">120 × 120</option>
+                    <option value="150x150">150 × 150</option>
+                    <option value="200x200">200 × 200</option>
+                    <option value="1080x1080">1080 × 1080</option>
+                    <option value="1080x1920">1080 × 1920</option>
+                    <option value="1920x1080">1920 × 1080</option>
+                    <option value="256x256">256 × 256</option>
+                    <option value="512x512">512 × 512</option>
+                </select>
+            </div>
+            <div class="form-group" id="customSizeInputGroup" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                <label style="margin-bottom: 10px; display: block;">🎯 自定义尺寸输入</label>
+                <div class="row">
+                    <div class="form-group">
+                        <label>宽度 (px)</label>
+                        <input type="number" id="customWidth" value="1080" min="40" max="1920" placeholder="40-1920">
+                    </div>
+                    <div class="form-group">
+                        <label>高度 (px)</label>
+                        <input type="number" id="customHeight" value="1080" min="40" max="1920" placeholder="40-1920">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" id="applyCustomSize" style="width: 100%; margin-top: 10px;">
+                    ✓ 应用自定义尺寸
+                </button>
+                <p class="info-text">输入范围：40-1920 像素</p>
+            </div>
+            <div class="form-group">
+                <label>按键文字（支持汉字）</label>
+                <input type="text" id="keyText" value="我" placeholder="输入汉字或字母">
+            </div>
+            <div class="form-group">
+                <label>副标题文字</label>
+                <div id="subtitleContainer">
+                    <!-- 副标题将动态添加到这里 -->
+                </div>
+                <button type="button" class="btn-secondary" id="addSubtitleBtn" style="width: 100%; margin-top: 10px; padding: 10px;">+ 添加副标题</button>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>文字大小</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="fontSize" min="12" max="80" value="40">
+                        <span class="range-value" id="fontSizeValue">40</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>文字颜色</label>
+                    <input type="color" id="textColor" value="#ffffff">
+                </div>
+            </div>
+            <p class="info-text">💡 提示：鼠标悬停在预览框内的文字上，使用滚轮可调整该文字的大小</p>
+            <div class="row">
+                <div class="form-group">
+                    <label>水平位置</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="textPosX" min="0" max="100" value="50">
+                        <span class="range-value" id="textPosXValue">50%</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>垂直位置</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="textPosY" min="0" max="100" value="50">
+                        <span class="range-value" id="textPosYValue">50%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>宽度 (px)</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="keyWidth" min="40" max="1920" value="1080">
+                        <span class="range-value" id="widthValue">1080</span>
+                    </div>
+                    <input type="number" id="keyWidthInput" value="1080" min="40" max="1920" style="margin-top: 5px;">
+                </div>
+                <div class="form-group">
+                    <label>高度 (px)</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="keyHeight" min="40" max="1920" value="1080">
+                        <span class="range-value" id="heightValue">1080</span>
+                    </div>
+                    <input type="number" id="keyHeightInput" value="1080" min="40" max="1920" style="margin-top: 5px;">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>圆角半径</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="borderRadius" min="0" max="150" value="20">
+                        <span class="range-value" id="radiusValue">20</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>边缘留白</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="padding" min="0" max="60" value="20">
+                        <span class="range-value" id="paddingValue">20</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>图边留白（导出时）</label>
+                <div class="range-wrapper">
+                    <input type="range" id="imageMargin" min="0" max="50" value="10">
+                    <span class="range-value" id="imageMarginValue">10</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>整体透明度</label>
+                <div class="range-wrapper">
+                    <input type="range" id="opacity" min="0" max="100" value="100">
+                    <span class="range-value" id="opacityValue">100%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间面板：实时预览 -->
+        <div class="panel center-panel">
+            <h1>👁️ 实时预览</h1>
+            <div class="preview-area" id="previewArea">
+                <div class="key-preview" id="keyPreview">我</div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="resetBtn">🔄 重置</button>
+                <button class="btn btn-secondary" id="resetPositionBtn">📍 重置位置</button>
+                <button class="btn btn-primary" id="downloadBtn">💾 下载图片</button>
+            </div>
+        </div>
+
+        <!-- 右侧面板：样式设置 -->
+        <div class="panel right-panel">
+            <h1>🎨 样式设置</h1>
+
+            <h2>🎨 填充颜色</h2>
+            <div class="form-group">
+                <label>填充类型</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-type="solid">纯色</button>
+                    <button class="toggle-btn" data-type="gradient">渐变</button>
+                    <button class="toggle-btn" data-type="image">图片</button>
+                </div>
+            </div>
+            <div class="row" id="solidColorSection">
+                <div class="form-group">
+                    <label>背景颜色</label>
+                    <input type="color" id="bgColor" value="#667eea">
+                </div>
+            </div>
+            <div id="imageSection" style="display: none;">
+                <div class="form-group">
+                    <label>导入背景图片</label>
+                    <input type="file" id="bgImageInput" accept="image/*" style="display: none;">
+                    <button type="button" class="btn btn-secondary" id="selectImageBtn" style="width: 100%;">
+                        📁 选择图片
+                    </button>
+                </div>
+                <div class="form-group" id="imagePreviewContainer" style="display: none;">
+                    <label>图片预览</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <img id="bgImagePreview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);">
+                        <button type="button" class="btn-secondary" id="removeImageBtn" style="padding: 8px 12px;">
+                            🗑️ 移除
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>图片缩放方式</label>
+                    <select id="bgImageSize">
+                        <option value="cover">覆盖（裁剪填充）</option>
+                        <option value="contain">包含（完整显示）</option>
+                        <option value="stretch">拉伸（铺满）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>图片不透明度</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="bgImageOpacity" min="0" max="100" value="100">
+                        <span class="range-value" id="bgImageOpacityValue">100%</span>
+                    </div>
+                </div>
+            </div>
+            <div id="gradientSection" style="display: none;">
+                <div class="row">
+                    <div class="form-group">
+                        <label>起始颜色</label>
+                        <input type="color" id="gradientStart" value="#667eea">
+                    </div>
+                    <div class="form-group">
+                        <label>结束颜色</label>
+                        <input type="color" id="gradientEnd" value="#764ba2">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>渐变角度</label>
+                    <div class="range-wrapper">
+                        <input type="range" id="gradientAngle" min="0" max="360" value="135">
+                        <span class="range-value" id="angleValue">135°</span>
+                    </div>
+                </div>
+                <div class="gradient-preview" id="gradientPreview"></div>
+            </div>
+
+            <h2>✏️ 描边设置</h2>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="strokeEnabled">
+                    <label>启用描边</label>
+                </div>
+            </div>
+            <div id="strokeSection" class="section-disabled">
+                <div class="row">
+                    <div class="form-group">
+                        <label>描边宽度</label>
+                        <div class="range-wrapper">
+                            <input type="range" id="strokeWidth" min="1" max="20" value="3">
+                            <span class="range-value" id="strokeWidthValue">3</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>描边颜色</label>
+                        <input type="color" id="strokeColor" value="#ffffff">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描边类型</label>
+                    <select id="strokeType">
+                        <option value="solid">实线</option>
+                        <option value="dashed">虚线</option>
+                        <option value="dotted">点线</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>描边位置</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-type="outer">外描边</button>
+                        <button class="toggle-btn" data-type="inner">内描边</button>
+                    </div>
+                </div>
+            </div>
+
+            <h2>🌈 阴影设置</h2>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="shadowEnabled" checked>
+                    <label>启用阴影</label>
+                </div>
+            </div>
+            <div id="shadowSection">
+                <div class="row">
+                    <div class="form-group">
+                        <label>水平偏移</label>
+                        <div class="range-wrapper">
+                            <input type="range" id="shadowX" min="-30" max="30" value="4">
+                            <span class="range-value" id="shadowXValue">4</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>垂直偏移</label>
+                        <div class="range-wrapper">
+                            <input type="range" id="shadowY" min="-30" max="30" value="4">
+                            <span class="range-value" id="shadowYValue">4</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>模糊程度</label>
+                        <div class="range-wrapper">
+                            <input type="range" id="shadowBlur" min="0" max="50" value="15">
+                            <span class="range-value" id="shadowBlurValue">15</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>阴影颜色</label>
+                        <input type="color" id="shadowColor" value="#000000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>阴影类型</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-type="outer">外阴影</button>
+                        <button class="toggle-btn" data-type="inner">内阴影</button>
+                    </div>
+                </div>
+                <p class="info-text">提示：外阴影在元素外部，内阴影在元素内部</p>
+            </div>
+
+            <h2>✨ 光晕效果</h2>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="glowEnabled">
+                    <label>启用光晕</label>
+                </div>
+            </div>
+            <div id="glowSection" class="section-disabled">
+                <div class="row">
+                    <div class="form-group">
+                        <label>光晕大小</label>
+                        <div class="range-wrapper">
+                            <input type="range" id="glowBlur" min="0" max="100" value="20">
+                            <span class="range-value" id="glowBlurValue">20</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>光晕强度</label>
+                        <div class="range-wrapper">
+                            <input type="range" id="glowSpread" min="0" max="50" value="5">
+                            <span class="range-value" id="glowSpreadValue">5</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>光晕颜色</label>
+                        <input type="color" id="glowColor" value="#ffffff">
+                    </div>
+                    <div class="form-group">
+                        <label>光晕透明度</label>
+                        <div class="range-wrapper">
+                            <input type="range" id="glowOpacity" min="0" max="100" value="60">
+                            <span class="range-value" id="glowOpacityValue">60%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>光晕类型</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-type="outer">外光晕</button>
+                        <button class="toggle-btn" data-type="inner">内光晕</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
